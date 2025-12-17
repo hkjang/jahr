@@ -21,6 +21,9 @@ import {
   X,
   Briefcase,
   Sparkles,
+  Target,
+  Home,
+  FolderKanban,
 } from "lucide-react";
 
 const menuGroups = [
@@ -38,18 +41,28 @@ const menuGroups = [
     ],
   },
   {
+    label: "OKR/성과",
+    items: [
+      { title: "OKR 관리", href: "/admin/okr", icon: Target },
+      { title: "평가 관리", href: "/admin/evaluation", icon: TrendingUp },
+      { title: "다면 평가", href: "/admin/peer-review", icon: Users },
+    ],
+  },
+  {
     label: "근태/급여",
     items: [
       { title: "근태 관리", href: "/admin/attendance", icon: Clock },
       { title: "휴가 관리", href: "/admin/leave", icon: Calendar },
+      { title: "유연 근무", href: "/admin/flex-work", icon: Home },
       { title: "급여 관리", href: "/admin/salary", icon: CreditCard },
     ],
   },
   {
-    label: "평가/교육",
+    label: "인재 개발",
     items: [
-      { title: "평가 관리", href: "/admin/evaluation", icon: TrendingUp },
       { title: "교육 관리", href: "/admin/training", icon: GraduationCap },
+      { title: "프로젝트", href: "/admin/projects", icon: FolderKanban },
+      { title: "스킬 관리", href: "/admin/skills", icon: Briefcase },
     ],
   },
   {
@@ -125,6 +138,9 @@ export function AdminSidebar({ open = true, onClose }: AdminSidebarProps) {
       Database: "Database",
       Briefcase: "Briefcase",
       Sparkles: "Sparkles",
+      Target: "Target",
+      Home: "Home",
+      FolderKanban: "FolderKanban",
     };
     return iconNames[IconComponent.displayName || IconComponent.name] || "FileCheck";
   };

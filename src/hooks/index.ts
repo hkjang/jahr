@@ -9,4 +9,8 @@ export {
   SkipLink,
 } from "./useAccessibility";
 
+// Tab navigation hooks
+export { useTabNavigation } from "./useTabNavigation";
+export { useTabKeyboard } from "./useTabKeyboard";
+
 

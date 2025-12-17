@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { useTabNavigation } from "@/hooks";
 import {
   LayoutDashboard,
   Users,
@@ -102,6 +103,39 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ open = true, onClose }: AdminSidebarProps) {
   const pathname = usePathname();
+  const { navigateToMenu } = useTabNavigation();
+
+  // Get icon name from component
+  const getIconName = (IconComponent: React.ComponentType<{ className?: string }>): string => {
+    const iconNames: Record<string, string> = {
+      LayoutDashboard: "LayoutDashboard",
+      Users: "Users",
+      Building2: "Building2",
+      Clock: "Clock",
+      Calendar: "Calendar",
+      CreditCard: "CreditCard",
+      TrendingUp: "TrendingUp",
+      GraduationCap: "GraduationCap",
+      FileCheck: "FileCheck",
+      BarChart3: "BarChart3",
+      Settings: "Settings",
+      Shield: "Shield",
+      Database: "Database",
+      Briefcase: "Briefcase",
+    };
+    return iconNames[IconComponent.displayName || IconComponent.name] || "FileCheck";
+  };
+
+  const handleMenuClick = (
+    e: React.MouseEvent,
+    href: string,
+    title: string,
+    IconComponent: React.ComponentType<{ className?: string }>
+  ) => {
+    e.preventDefault();
+    navigateToMenu(href, title, href, getIconName(IconComponent));
+    onClose?.(); // Close mobile sidebar
+  };
 
   return (
     <>
@@ -154,6 +188,7 @@ export function AdminSidebar({ open = true, onClose }: AdminSidebarProps) {
                     <Link
                       key={item.href}
                       href={item.href}
+                      onClick={(e) => handleMenuClick(e, item.href, item.title, item.icon)}
                       className={cn(
                         "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
                         isActive

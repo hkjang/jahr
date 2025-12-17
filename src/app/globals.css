@@ -3,6 +3,15 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* 반응형 사이드바 너비 */
+  --sidebar-width: 16rem; /* 256px */
+  --sidebar-collapsed-width: 4rem; /* 64px */
+
+  /* 접근성 - 포커스 스타일 */
+  --focus-ring-color: #3b82f6;
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
 }
 
 @theme inline {
@@ -16,6 +25,7 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --focus-ring-color: #60a5fa;
   }
 }
 
@@ -23,4 +33,223 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ========================================
+   반응형 유틸리티 클래스
+   ======================================== */
+
+/* 모바일 우선 반응형 그리드 */
+.responsive-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .responsive-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (min-width: 1280px) {
+  .responsive-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* 모바일에서 숨김 */
+.hide-mobile {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .hide-mobile {
+    display: block;
+  }
+}
+
+/* 데스크톱에서 숨김 */
+.hide-desktop {
+  display: block;
+}
+
+@media (min-width: 1024px) {
+  .hide-desktop {
+    display: none;
+  }
+}
+
+/* 반응형 텍스트 크기 */
+.text-responsive-sm {
+  font-size: 0.875rem;
+}
+
+@media (min-width: 768px) {
+  .text-responsive-sm {
+    font-size: 1rem;
+  }
+}
+
+.text-responsive-lg {
+  font-size: 1.25rem;
+}
+
+@media (min-width: 768px) {
+  .text-responsive-lg {
+    font-size: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .text-responsive-lg {
+    font-size: 1.875rem;
+  }
+}
+
+/* 반응형 패딩 */
+.p-responsive {
+  padding: 1rem;
+}
+
+@media (min-width: 768px) {
+  .p-responsive {
+    padding: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .p-responsive {
+    padding: 2rem;
+  }
+}
+
+/* ========================================
+   접근성 스타일
+   ======================================== */
+
+/* 포커스 표시 스타일 */
+:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* 버튼 및 링크 포커스 */
+button:focus-visible,
+a:focus-visible,
+[role="button"]:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+  border-radius: 4px;
+}
+
+/* 인풋 필드 포커스 */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: 0;
+  box-shadow: 0 0 0 var(--focus-ring-offset) var(--focus-ring-color);
+}
+
+/* 스킵 링크 (접근성) */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--focus-ring-color);
+  color: white;
+  padding: 8px 16px;
+  z-index: 9999;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* 고대비 모드 지원 */
+@media (prefers-contrast: high) {
+  :root {
+    --background: #ffffff;
+    --foreground: #000000;
+    --focus-ring-color: #000000;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    border: 2px solid currentColor;
+  }
+}
+
+/* 움직임 감소 선호 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 스크린 리더용 시각적 숨김 */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* 포커스 시에만 표시 */
+.sr-only-focusable:focus,
+.sr-only-focusable:focus-within {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: inherit;
+  margin: inherit;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* ========================================
+   터치 디바이스 최적화
+   ======================================== */
+
+@media (hover: none) and (pointer: coarse) {
+  /* 터치 타겟 최소 크기 (44x44px) */
+  button,
+  a,
+  [role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* 터치 시 호버 상태 제거 */
+  .hover\:bg-gray-100:hover {
+    background-color: inherit;
+  }
+}
+
+/* 터치 탭 하이라이트 색상 */
+* {
+  -webkit-tap-highlight-color: rgba(59, 130, 246, 0.2);
 }

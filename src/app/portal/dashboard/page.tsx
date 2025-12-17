@@ -13,6 +13,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { formatKoreanDate } from "@/lib/utils";
+import { QuickActions } from "@/components/portal/QuickActions";
 
 // Mock 데이터 (실제로는 API에서 가져옴)
 const todayAttendance = {
@@ -41,6 +42,8 @@ const recentNotifications = [
 
 export default function PortalDashboard() {
   const { data: session } = useSession();
+  // 사용자 역할 코드 (실제로는 세션에서 가져옴)
+  const userRoleCode = (session?.user as { roleCode?: string })?.roleCode || "EMPLOYEE";
 
   return (
     <div className="space-y-6">
@@ -53,6 +56,10 @@ export default function PortalDashboard() {
           오늘도 좋은 하루 보내세요. | {formatKoreanDate(new Date())}
         </p>
       </div>
+
+      {/* 빠른 액션 */}
+      <QuickActions roleCode={userRoleCode} columns={3} />
+
 
       {/* 오늘의 출근 현황 */}
       <Card>

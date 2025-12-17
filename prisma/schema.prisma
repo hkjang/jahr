@@ -792,3 +792,84 @@ model Holiday {
 
   @@unique([date])
 }
+
+// ============================================
+// AUTOMATION (HR 업무 자동화)
+// ============================================
+
+enum AutomationType {
+  ONBOARDING       // 입사 자동화
+  OFFBOARDING      // 퇴사 자동화
+  APPOINTMENT      // 인사 발령
+  ATTENDANCE_ALERT // 근태 이상 감지
+  NOTIFICATION     // 알림 자동화
+  LEAVE_BALANCE    // 연차 자동 부여
+  EVALUATION_CYCLE // 평가 주기
+}
+
+enum AutomationStatus {
+  PENDING
+  RUNNING
+  SUCCESS
+  FAILED
+  CANCELLED
+}
+
+// 자동화 규칙
+model AutomationRule {
+  id          String         @id @default(cuid())
+  name        String
+  description String?
+  type        AutomationType
+  trigger     Json           // 트리거 조건 { event: "EMPLOYEE_HIRED", conditions: [] }
+  actions     Json           // 실행 액션 [{ type: "CREATE_ACCOUNT", params: {} }]
+  schedule    String?        // Cron 표현식 (스케줄 기반)
+  isActive    Boolean        @default(true)
+  priority    Int            @default(0)
+  createdBy   String
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  logs        AutomationLog[]
+
+  @@index([type])
+  @@index([isActive])
+}
+
+// 자동화 실행 로그
+model AutomationLog {
+  id          String           @id @default(cuid())
+  ruleId      String
+  rule        AutomationRule   @relation(fields: [ruleId], references: [id], onDelete: Cascade)
+  employeeId  String?
+  status      AutomationStatus @default(PENDING)
+  triggerData Json?            // 트리거된 데이터
+  result      Json?            // 실행 결과
+  error       String?
+  startedAt   DateTime         @default(now())
+  completedAt DateTime?
+
+  @@index([ruleId])
+  @@index([employeeId])
+  @@index([status])
+  @@index([startedAt])
+}
+
+// 근태 이상 알림
+model AttendanceAlert {
+  id          String   @id @default(cuid())
+  employeeId  String
+  date        DateTime @db.Date
+  alertType   String   // LATE, ABSENT, EARLY_LEAVE, OVERTIME_EXCESS
+  message     String
+  isResolved  Boolean  @default(false)
+  resolvedBy  String?
+  resolvedAt  DateTime?
+  createdAt   DateTime @default(now())
+
+  @@index([employeeId])
+  @@index([date])
+  @@index([alertType])
+  @@index([isResolved])
+}
+

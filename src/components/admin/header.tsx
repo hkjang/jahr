@@ -1,13 +1,12 @@
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
-import { Bell, Menu, LogOut, User, Settings, ChevronDown, Search, ExternalLink } from "lucide-react";
+import { Bell, Menu, LogOut, User, Settings, ChevronDown, ExternalLink } from "lucide-react";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
   Button,
-  Input,
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -15,6 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui";
+import { GlobalSearch } from "@/components/ui/GlobalSearch";
 import Link from "next/link";
 
 interface AdminHeaderProps {
@@ -41,12 +41,11 @@ export function AdminHeader({ onMenuClick }: AdminHeaderProps) {
           <Menu className="w-5 h-5 text-gray-400" />
         </button>
 
-        {/* 검색 */}
+        {/* 통합 검색 */}
         <div className="hidden md:block flex-1 max-w-md">
-          <Input
-            placeholder="검색..."
-            leftIcon={<Search className="w-4 h-4" />}
-            className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-500 focus:ring-blue-500"
+          <GlobalSearch
+            placeholder="사번, 이름, 부서 검색... (Ctrl+K)"
+            className="[&_input]:bg-gray-800 [&_input]:border-gray-700 [&_input]:text-white [&_input]:placeholder:text-gray-500"
           />
         </div>
 

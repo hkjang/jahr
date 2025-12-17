@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 
     // Calculate average performance score
     const performanceScore = evaluations.length > 0
-      ? evaluations.reduce((sum, e) => sum + (e.finalScore || 0), 0) / evaluations.length
+      ? evaluations.reduce((sum, e) => sum + Number(e.finalScore || 0), 0) / evaluations.length
       : 50;
 
     // Get skill readiness (based on employee skills)

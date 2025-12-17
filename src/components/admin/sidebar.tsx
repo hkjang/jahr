@@ -71,6 +71,7 @@ const menuGroups = [
       { title: "인력 계획", href: "/admin/hr-strategy/workforce", icon: Users },
       { title: "정원 관리", href: "/admin/hr-strategy/headcount", icon: Building2 },
       { title: "시뮬레이션", href: "/admin/hr-strategy/simulation", icon: TrendingUp },
+      { title: "HR 분석", href: "/admin/hr-analytics", icon: TrendingUp },
     ],
   },
   {
@@ -88,6 +89,7 @@ const menuGroups = [
       { title: "권한 관리", href: "/admin/permissions", icon: Shield },
       { title: "코드 관리", href: "/admin/codes", icon: Database },
       { title: "API 관리", href: "/admin/api-management", icon: Settings },
+      { title: "운영 현황", href: "/admin/operations", icon: Settings },
       { title: "시스템 설정", href: "/admin/settings", icon: Settings },
     ],
   },

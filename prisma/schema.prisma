@@ -1620,3 +1620,89 @@ model DeploymentRecord {
   @@index([deployedAt])
 }
 
+// ============================================
+// PHASE 9: HR DATA-BASED DECISION SUPPORT
+// ============================================
+
+// CEO 경영 리포트
+model ExecutiveReport {
+  id            String   @id @default(cuid())
+  title         String
+  reportType    String   // MONTHLY, QUARTERLY, ANNUAL, CUSTOM
+  period        String   // 2024-Q1, 2024-12 등
+  data          Json     // 리포트 데이터
+  summary       String?  @db.Text
+  keyInsights   String[] // 핵심 인사이트
+  generatedAt   DateTime @default(now())
+  generatedBy   String
+
+  @@index([reportType])
+  @@index([period])
+}
+
+// 이직 위험 분석
+model TurnoverRiskAnalysis {
+  id              String   @id @default(cuid())
+  employeeId      String
+  riskScore       Float    // 0-100
+  riskLevel       String   // LOW, MEDIUM, HIGH, CRITICAL
+  factors         Json     // 위험 요인 분석
+  recommendations String[] // 대응 권고사항
+  analyzedAt      DateTime @default(now())
+
+  @@index([employeeId])
+  @@index([riskLevel])
+  @@index([analyzedAt])
+}
+
+// 다양성 지표
+model DiversityMetrics {
+  id              String   @id @default(cuid())
+  period          String   // 측정 기간
+  organizationId  String?
+  metrics         Json     // 성별, 연령, 직급별 분포 등
+  genderRatio     Float?   // 성별 비율
+  ageDistribution Json?    // 연령대 분포
+  positionDiversity Float? // 직급 다양성 지수
+  trend           Json?    // 추세 분석
+  measuredAt      DateTime @default(now())
+
+  @@index([period])
+  @@index([organizationId])
+}
+
+// 보상 공정성 분석
+model CompensationAnalysis {
+  id              String   @id @default(cuid())
+  period          String
+  organizationId  String?
+  avgSalaryByLevel Json    // 직급별 평균 급여
+  payGap          Json?    // 성별/연령별 급여 격차
+  performancePayRatio Float? // 성과급 비율
+  marketComparison Json?   // 시장 대비 분석
+  recommendations String[]
+  analyzedAt      DateTime @default(now())
+
+  @@index([period])
+  @@index([organizationId])
+}
+
+// 조직 건강도 지수
+model OrganizationHealthIndex {
+  id              String   @id @default(cuid())
+  organizationId  String?
+  period          String
+  overallScore    Float    // 0-100
+  dimensions      Json     // 세부 지표
+  turnoverRate    Float?
+  engagementScore Float?
+  trainingHours   Float?
+  leaveUtilization Float?
+  complianceRate  Float?
+  trend           String?  // UP, DOWN, STABLE
+  calculatedAt    DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([period])
+}
+

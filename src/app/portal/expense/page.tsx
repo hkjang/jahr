@@ -1,19 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, Badge, Button, Input, Label } from "@/components/ui";
-import { Receipt, Plus, Calendar, DollarSign, Clock, CheckCircle, XCircle, Send } from "lucide-react";
+import { Receipt, Plus, Clock, CheckCircle, XCircle, Send } from "lucide-react";
 import { formatCurrency, formatKoreanDate } from "@/lib/utils";
 
 interface Expense {
   id: string;
-  category: string;
-  amount: number;
-  description: string;
-  date: string;
+  docNumber: string;
+  title: string;
+  content: {
+    category: string;
+    amount: number;
+    date: string;
+    description: string;
+  };
   status: string;
   createdAt: string;
+}
+
+async function fetchExpenses() {
+  const res = await fetch("/api/expense");
+  if (!res.ok) throw new Error("Failed to fetch");
+  return res.json();
 }
 
 const categoryLabels: Record<string, string> = {
@@ -39,43 +49,79 @@ const statusColors: Record<string, string> = {
 };
 
 export default function PortalExpensePage() {
-  const router = useRouter();
+  const queryClient = useQueryClient();
   const [showForm, setShowForm] = useState(false);
-  
+  const [formData, setFormData] = useState({
+    category: "TRANSPORT",
+    amount: "",
+    date: "",
+    description: "",
+  });
+
+  const { data, isLoading } = useQuery({
+    queryKey: ["myExpenses"],
+    queryFn: fetchExpenses,
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      const res = await fetch("/api/expense", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...data, amount: Number(data.amount) }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["myExpenses"] });
+      setShowForm(false);
+      setFormData({ category: "TRANSPORT", amount: "", date: "", description: "" });
+    },
+  });
+
   // 모의 데이터
-  const expenses: Expense[] = [
+  const mockExpenses: Expense[] = [
     {
       id: "1",
-      category: "TRANSPORT",
-      amount: 35000,
-      description: "고객사 미팅 택시비",
-      date: "2024-12-16",
+      docNumber: "20241216-EXP-0001",
+      title: "경비 청구 - 고객사 미팅 택시비",
+      content: { category: "TRANSPORT", amount: 35000, date: "2024-12-16", description: "고객사 미팅 택시비" },
       status: "PENDING",
       createdAt: "2024-12-17T10:00:00",
     },
     {
       id: "2",
-      category: "MEAL",
-      amount: 120000,
-      description: "팀 회식비",
-      date: "2024-12-13",
+      docNumber: "20241213-EXP-0001",
+      title: "경비 청구 - 팀 회식비",
+      content: { category: "MEAL", amount: 120000, date: "2024-12-13", description: "팀 회식비" },
       status: "APPROVED",
       createdAt: "2024-12-14T09:00:00",
     },
     {
       id: "3",
-      category: "SUPPLIES",
-      amount: 45000,
-      description: "사무용품 구매",
-      date: "2024-12-10",
+      docNumber: "20241210-EXP-0001",
+      title: "경비 청구 - 사무용품 구매",
+      content: { category: "SUPPLIES", amount: 45000, date: "2024-12-10", description: "사무용품 구매" },
       status: "PAID",
       createdAt: "2024-12-11T14:00:00",
     },
   ];
 
-  const totalPending = expenses
-    .filter((e) => e.status === "PENDING" || e.status === "APPROVED")
-    .reduce((sum, e) => sum + e.amount, 0);
+  const expenses = data?.data || mockExpenses;
+  const totalAmount = expenses.reduce((sum: number, e: Expense) => sum + (e.content?.amount || 0), 0);
+  const pendingAmount = expenses
+    .filter((e: Expense) => e.status === "PENDING" || e.status === "APPROVED")
+    .reduce((sum: number, e: Expense) => sum + (e.content?.amount || 0), 0);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.amount || !formData.date || !formData.description) {
+      alert("모든 필드를 입력하세요.");
+      return;
+    }
+    createMutation.mutate(formData);
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -100,7 +146,7 @@ export default function PortalExpensePage() {
           <CardContent className="p-4 text-center">
             <p className="text-sm text-gray-500">이번 달 청구</p>
             <p className="text-xl font-bold text-blue-600 mt-1">
-              {formatCurrency(expenses.reduce((sum, e) => sum + e.amount, 0))}
+              {formatCurrency(totalAmount)}
             </p>
           </CardContent>
         </Card>
@@ -108,7 +154,7 @@ export default function PortalExpensePage() {
           <CardContent className="p-4 text-center">
             <p className="text-sm text-gray-500">승인 대기</p>
             <p className="text-xl font-bold text-yellow-600 mt-1">
-              {formatCurrency(totalPending)}
+              {formatCurrency(pendingAmount)}
             </p>
           </CardContent>
         </Card>
@@ -127,40 +173,59 @@ export default function PortalExpensePage() {
             <CardTitle className="text-blue-700">새 경비 청구</CardTitle>
           </CardHeader>
           <CardContent>
-            <form className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>카테고리</Label>
-                  <select className="w-full p-3 border rounded-lg">
+                  <Label>카테고리 *</Label>
+                  <select 
+                    className="w-full p-3 border rounded-lg"
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                  >
                     {Object.entries(categoryLabels).map(([value, label]) => (
                       <option key={value} value={value}>{label}</option>
                     ))}
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <Label>금액</Label>
-                  <Input type="number" placeholder="금액 입력" />
+                  <Label>금액 *</Label>
+                  <Input 
+                    type="number" 
+                    placeholder="금액 입력"
+                    value={formData.amount}
+                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                  />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>사용일</Label>
-                <Input type="date" />
+                <Label>사용일 *</Label>
+                <Input 
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                />
               </div>
               <div className="space-y-2">
-                <Label>상세 내용</Label>
+                <Label>상세 내용 *</Label>
                 <textarea
                   rows={3}
                   placeholder="경비 사용 내역을 입력하세요..."
                   className="w-full p-3 border rounded-lg resize-none"
+                  value={formData.description}
+                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 />
               </div>
               <div className="flex gap-3">
                 <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
                   취소
                 </Button>
-                <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+                <Button 
+                  type="submit" 
+                  className="bg-blue-600 hover:bg-blue-700"
+                  disabled={createMutation.isPending}
+                >
                   <Send className="w-4 h-4 mr-2" />
-                  청구하기
+                  {createMutation.isPending ? "청구 중..." : "청구하기"}
                 </Button>
               </div>
             </form>
@@ -177,11 +242,15 @@ export default function PortalExpensePage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {expenses.length === 0 ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : expenses.length === 0 ? (
             <p className="text-center text-gray-500 py-8">청구 내역이 없습니다.</p>
           ) : (
             <div className="space-y-3">
-              {expenses.map((expense) => (
+              {expenses.map((expense: Expense) => (
                 <div
                   key={expense.id}
                   className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
@@ -201,17 +270,17 @@ export default function PortalExpensePage() {
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h4 className="font-medium">{expense.description}</h4>
-                        <Badge variant="outline">{categoryLabels[expense.category]}</Badge>
+                        <h4 className="font-medium">{expense.content?.description || expense.title}</h4>
+                        <Badge variant="outline">{categoryLabels[expense.content?.category] || ""}</Badge>
                       </div>
                       <p className="text-sm text-gray-500">
-                        {formatKoreanDate(new Date(expense.date))}
+                        {expense.content?.date ? formatKoreanDate(new Date(expense.content.date)) : ""}
                       </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-4">
                     <div className="text-right">
-                      <p className="font-bold">{formatCurrency(expense.amount)}</p>
+                      <p className="font-bold">{formatCurrency(expense.content?.amount || 0)}</p>
                     </div>
                     <Badge className={statusColors[expense.status]}>
                       {statusLabels[expense.status]}

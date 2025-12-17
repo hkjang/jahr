@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, Button, Input, Label } from "@/components/ui";
 import { Clock, ArrowLeft, Send, AlertCircle } from "lucide-react";
 
@@ -19,6 +20,28 @@ export default function AttendanceCorrectionPage() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const createMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      const res = await fetch("/api/attendance/correction", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Failed to submit");
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      alert("근태 정정 신청이 완료되었습니다.");
+      router.push("/portal/attendance");
+    },
+    onError: (error: Error) => {
+      alert(error.message);
+    },
+  });
+
   const validate = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.date) newErrors.date = "날짜를 선택하세요.";
@@ -33,9 +56,7 @@ export default function AttendanceCorrectionPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      // API 호출
-      alert("근태 정정 신청이 완료되었습니다.");
-      router.push("/portal/attendance");
+      createMutation.mutate(formData);
     }
   };
 
@@ -73,7 +94,7 @@ export default function AttendanceCorrectionPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* 날짜 */}
             <div className="space-y-2">
-              <Label>정정 날짜</Label>
+              <Label>정정 날짜 *</Label>
               <Input
                 type="date"
                 value={formData.date}
@@ -131,7 +152,7 @@ export default function AttendanceCorrectionPage() {
 
             {/* 사유 */}
             <div className="space-y-2">
-              <Label>정정 사유</Label>
+              <Label>정정 사유 *</Label>
               <textarea
                 value={formData.reason}
                 onChange={(e) => setFormData({ ...formData, reason: e.target.value })}
@@ -149,9 +170,13 @@ export default function AttendanceCorrectionPage() {
               <Button type="button" variant="outline" className="flex-1" onClick={() => router.back()}>
                 취소
               </Button>
-              <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
+              <Button 
+                type="submit" 
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+                disabled={createMutation.isPending}
+              >
                 <Send className="w-4 h-4 mr-2" />
-                정정 신청
+                {createMutation.isPending ? "신청 중..." : "정정 신청"}
               </Button>
             </div>
           </form>

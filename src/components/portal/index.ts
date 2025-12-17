@@ -9,3 +9,15 @@ export {
   WidgetContainer,
   DashboardGrid,
 } from "./Widget";
+
+// Navigation components
+export { FavoritesMenu } from "./FavoritesMenu";
+export type { FavoriteMenuItem } from "./FavoritesMenu";
+export { RecentWork, addRecentWork } from "./RecentWork";
+export type { RecentWorkItem } from "./RecentWork";
+
+// Dashboard components
+export { DraggableWidget, WidgetGrid, useWidgetLayout, AddWidgetButton } from "./DraggableWidget";
+export type { WidgetConfig } from "./DraggableWidget";
+export { RoleDashboard } from "./RoleDashboard";
+

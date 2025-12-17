@@ -1,17 +1,203 @@
 @import "tailwindcss";
 
+/* ========================================
+   디자인 시스템 - Light Theme (기본)
+   ======================================== */
 :root {
+  /* 배경색 */
   --background: #ffffff;
-  --foreground: #171717;
+  --background-secondary: #f9fafb;
+  --background-tertiary: #f3f4f6;
+  --background-accent: #eff6ff;
+
+  /* 전경색 */
+  --foreground: #111827;
+  --foreground-secondary: #374151;
+  --foreground-tertiary: #6b7280;
+  --foreground-muted: #9ca3af;
+
+  /* 테두리 */
+  --border: #e5e7eb;
+  --border-light: #f3f4f6;
+  --border-focus: #3b82f6;
+
+  /* Primary 색상 */
+  --primary: #3b82f6;
+  --primary-hover: #2563eb;
+  --primary-light: #dbeafe;
+  --primary-foreground: #ffffff;
+
+  /* Secondary 색상 */
+  --secondary: #6b7280;
+  --secondary-hover: #4b5563;
+  --secondary-light: #f3f4f6;
+  --secondary-foreground: #ffffff;
+
+  /* Success 색상 */
+  --success: #10b981;
+  --success-hover: #059669;
+  --success-light: #d1fae5;
+  --success-foreground: #ffffff;
+
+  /* Warning 색상 */
+  --warning: #f59e0b;
+  --warning-hover: #d97706;
+  --warning-light: #fef3c7;
+  --warning-foreground: #ffffff;
+
+  /* Error/Danger 색상 */
+  --error: #ef4444;
+  --error-hover: #dc2626;
+  --error-light: #fee2e2;
+  --error-foreground: #ffffff;
+
+  /* Info 색상 */
+  --info: #3b82f6;
+  --info-hover: #2563eb;
+  --info-light: #dbeafe;
+  --info-foreground: #ffffff;
+
+  /* 카드 */
+  --card: #ffffff;
+  --card-hover: #f9fafb;
+  --card-border: #e5e7eb;
+
+  /* 입력 필드 */
+  --input: #ffffff;
+  --input-border: #d1d5db;
+  --input-focus: #3b82f6;
+  --input-placeholder: #9ca3af;
+
+  /* 테이블 */
+  --table-header: #f9fafb;
+  --table-row-hover: #f3f4f6;
+  --table-border: #e5e7eb;
+
+  /* 사이드바 */
+  --sidebar: #ffffff;
+  --sidebar-hover: #f3f4f6;
+  --sidebar-active: #eff6ff;
+  --sidebar-border: #e5e7eb;
 
   /* 반응형 사이드바 너비 */
-  --sidebar-width: 16rem; /* 256px */
-  --sidebar-collapsed-width: 4rem; /* 64px */
+  --sidebar-width: 16rem;
+  --sidebar-collapsed-width: 4rem;
 
   /* 접근성 - 포커스 스타일 */
   --focus-ring-color: #3b82f6;
   --focus-ring-width: 2px;
   --focus-ring-offset: 2px;
+
+  /* 그림자 */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1),
+    0 4px 6px -4px rgb(0 0 0 / 0.1);
+
+  /* 반경 */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+}
+
+/* ========================================
+   디자인 시스템 - Dark Theme
+   ======================================== */
+.dark,
+[data-theme="dark"] {
+  /* 배경색 */
+  --background: #0f172a;
+  --background-secondary: #1e293b;
+  --background-tertiary: #334155;
+  --background-accent: #1e3a5f;
+
+  /* 전경색 */
+  --foreground: #f8fafc;
+  --foreground-secondary: #e2e8f0;
+  --foreground-tertiary: #94a3b8;
+  --foreground-muted: #64748b;
+
+  /* 테두리 */
+  --border: #334155;
+  --border-light: #1e293b;
+  --border-focus: #60a5fa;
+
+  /* Primary 색상 */
+  --primary: #3b82f6;
+  --primary-hover: #60a5fa;
+  --primary-light: #1e3a5f;
+  --primary-foreground: #ffffff;
+
+  /* Secondary 색상 */
+  --secondary: #94a3b8;
+  --secondary-hover: #cbd5e1;
+  --secondary-light: #1e293b;
+  --secondary-foreground: #0f172a;
+
+  /* Success 색상 */
+  --success: #10b981;
+  --success-hover: #34d399;
+  --success-light: #064e3b;
+  --success-foreground: #ffffff;
+
+  /* Warning 색상 */
+  --warning: #f59e0b;
+  --warning-hover: #fbbf24;
+  --warning-light: #78350f;
+  --warning-foreground: #ffffff;
+
+  /* Error/Danger 색상 */
+  --error: #ef4444;
+  --error-hover: #f87171;
+  --error-light: #7f1d1d;
+  --error-foreground: #ffffff;
+
+  /* Info 색상 */
+  --info: #60a5fa;
+  --info-hover: #93c5fd;
+  --info-light: #1e3a5f;
+  --info-foreground: #ffffff;
+
+  /* 카드 */
+  --card: #1e293b;
+  --card-hover: #334155;
+  --card-border: #334155;
+
+  /* 입력 필드 */
+  --input: #1e293b;
+  --input-border: #475569;
+  --input-focus: #60a5fa;
+  --input-placeholder: #64748b;
+
+  /* 테이블 */
+  --table-header: #1e293b;
+  --table-row-hover: #334155;
+  --table-border: #334155;
+
+  /* 사이드바 */
+  --sidebar: #1e293b;
+  --sidebar-hover: #334155;
+  --sidebar-active: #1e3a5f;
+  --sidebar-border: #334155;
+
+  /* 접근성 - 포커스 스타일 */
+  --focus-ring-color: #60a5fa;
+
+  /* 그림자 (다크모드에서 약화) */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5);
+}
+
+/* 시스템 테마 선호 (fallback) */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light):not([data-theme="light"]) {
+    --background: #0f172a;
+    --foreground: #f8fafc;
+    --focus-ring-color: #60a5fa;
+  }
 }
 
 @theme inline {
@@ -21,18 +207,11 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-    --focus-ring-color: #60a5fa;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* ========================================

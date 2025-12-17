@@ -18,6 +18,7 @@ export async function POST(request: NextRequest) {
     const employee = await prisma.employee.findFirst({
       where: { userId: employeeId },
       include: {
+        user: true,
         position: true,
         job: true,
         organization: true

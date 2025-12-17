@@ -1,367 +1,309 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { 
-  FileText, 
+  FileCheck2, 
   Plus,
+  Copy,
+  Send,
   CheckCircle,
-  XCircle,
-  Clock,
-  Download,
-  ExternalLink,
-  Shield
+  XCircle
 } from 'lucide-react';
-
-interface CertificateIssuance {
-  id: string;
-  employeeId: string;
-  purpose: string | null;
-  status: string;
-  verificationCode: string;
-  approvedAt: string | null;
-  issuedAt: string | null;
-  expiryDate: string | null;
-  documentUrl: string | null;
-  createdAt: string;
-  template: {
-    id: string;
-    name: string;
-    type: string;
-  };
-}
 
 interface CertificateTemplate {
   id: string;
   name: string;
   type: string;
+  content: string;
   isActive: boolean;
 }
 
+interface CertificateIssuance {
+  id: string;
+  templateId: string;
+  employeeId: string;
+  verificationCode: string;
+  status: string;
+  issuedAt: string;
+  expiresAt: string | null;
+  template: { name: string };
+}
+
 const statusColors: Record<string, string> = {
-  REQUESTED: 'bg-yellow-100 text-yellow-800',
-  APPROVED: 'bg-blue-100 text-blue-800',
+  PENDING: 'bg-yellow-100 text-yellow-800',
   ISSUED: 'bg-green-100 text-green-800',
-  REJECTED: 'bg-red-100 text-red-800',
+  REVOKED: 'bg-red-100 text-red-800',
   EXPIRED: 'bg-gray-100 text-gray-800',
 };
 
-const statusLabels: Record<string, string> = {
-  REQUESTED: '요청됨',
-  APPROVED: '승인됨',
-  ISSUED: '발급됨',
-  REJECTED: '거절됨',
-  EXPIRED: '만료됨',
-};
-
-const typeLabels: Record<string, string> = {
-  EMPLOYMENT: '재직증명서',
-  CAREER: '경력증명서',
-  SALARY: '급여증명서',
-  POSITION: '직위증명서',
-  CUSTOM: '기타',
-};
-
 export default function CertificatesPage() {
-  const [issuances, setIssuances] = useState<CertificateIssuance[]>([]);
   const [templates, setTemplates] = useState<CertificateTemplate[]>([]);
+  const [issuances, setIssuances] = useState<CertificateIssuance[]>([]);
   const [loading, setLoading] = useState(true);
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [showRequestForm, setShowRequestForm] = useState(false);
-  
-  const [formData, setFormData] = useState({
-    templateId: '',
-    employeeId: '',
-    purpose: '',
-  });
+  const [activeTab, setActiveTab] = useState('issuances');
 
-  useEffect(() => {
-    fetchIssuances();
-    fetchTemplates();
-  }, [statusFilter]);
+  // Dialog states
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
+  const [issueDialogOpen, setIssueDialogOpen] = useState(false);
 
-  const fetchIssuances = async () => {
+  // Form states
+  const [templateForm, setTemplateForm] = useState({ name: '', type: 'EMPLOYMENT', content: '' });
+  const [issueForm, setIssueForm] = useState({ templateId: '', employeeId: '', expiresAt: '' });
+
+  useEffect(() => { fetchData(); }, []);
+
+  const fetchData = async () => {
     try {
       setLoading(true);
-      const url = statusFilter !== 'all' 
-        ? `/api/certificates?status=${statusFilter}`
-        : '/api/certificates';
-      const response = await fetch(url);
-      if (response.ok) {
-        const data = await response.json();
-        setIssuances(data);
-      }
+      const [templatesRes, issuancesRes] = await Promise.all([
+        fetch('/api/certificate-templates'),
+        fetch('/api/certificates'),
+      ]);
+
+      if (templatesRes.ok) setTemplates(await templatesRes.json());
+      if (issuancesRes.ok) setIssuances(await issuancesRes.json());
     } catch (error) {
-      console.error('Failed to fetch issuances:', error);
+      console.error('Failed to fetch data:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchTemplates = async () => {
-    try {
-      const response = await fetch('/api/certificate-templates');
-      if (response.ok) {
-        const data = await response.json();
-        setTemplates(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch templates:', error);
-    }
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Template CRUD
+  const handleCreateTemplate = async () => {
     try {
-      const response = await fetch('/api/certificates', {
+      const res = await fetch('/api/certificate-templates', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(templateForm),
       });
-      
-      if (response.ok) {
-        setShowRequestForm(false);
-        fetchIssuances();
-        setFormData({ templateId: '', employeeId: '', purpose: '' });
+      if (res.ok) {
+        setTemplateDialogOpen(false);
+        setTemplateForm({ name: '', type: 'EMPLOYMENT', content: '' });
+        fetchData();
       }
     } catch (error) {
-      console.error('Failed to request certificate:', error);
+      console.error('Failed to create template:', error);
     }
   };
 
-  const updateStatus = async (id: string, status: string, approvedBy?: string) => {
+  // Issuance CRUD
+  const handleIssueCertificate = async () => {
     try {
-      const response = await fetch(`/api/certificates/${id}`, {
+      const res = await fetch('/api/certificates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...issueForm,
+          expiresAt: issueForm.expiresAt || null,
+        }),
+      });
+      if (res.ok) {
+        setIssueDialogOpen(false);
+        setIssueForm({ templateId: '', employeeId: '', expiresAt: '' });
+        fetchData();
+      }
+    } catch (error) {
+      console.error('Failed to issue certificate:', error);
+    }
+  };
+
+  const handleRevokeCertificate = async (id: string) => {
+    if (!confirm('정말 취소하시겠습니까?')) return;
+    try {
+      await fetch(`/api/certificates/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status, approvedBy }),
+        body: JSON.stringify({ status: 'REVOKED' }),
       });
-      
-      if (response.ok) {
-        fetchIssuances();
-      }
+      fetchData();
     } catch (error) {
-      console.error('Failed to update status:', error);
+      console.error('Failed to revoke certificate:', error);
     }
   };
 
-  // 통계
-  const stats = {
-    total: issuances.length,
-    pending: issuances.filter(i => i.status === 'REQUESTED' || i.status === 'APPROVED').length,
-    issued: issuances.filter(i => i.status === 'ISSUED').length,
-  };
+  const issuedCount = issuances.filter(i => i.status === 'ISSUED').length;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">증명서 관리</h1>
-          <p className="text-muted-foreground">증명서 발급을 요청하고 관리합니다.</p>
-        </div>
-        <Button onClick={() => setShowRequestForm(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          발급 요청
-        </Button>
+      <div>
+        <h1 className="text-3xl font-bold">증명서 관리</h1>
+        <p className="text-muted-foreground">증명서 템플릿 및 발급을 관리합니다.</p>
       </div>
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">전체 발급</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">템플릿</CardTitle>
+            <FileCheck2 className="h-4 w-4 text-blue-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">대기중</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-500" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
-          </CardContent>
+          <CardContent><div className="text-2xl font-bold">{templates.length}</div></CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">발급 완료</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-500" />
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.issued}</div>
-          </CardContent>
+          <CardContent><div className="text-2xl font-bold">{issuedCount}</div></CardContent>
         </Card>
-      </div>
-
-      {/* Filter */}
-      <div className="flex items-center gap-4">
-        <Label>상태</Label>
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[150px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">전체</SelectItem>
-            <SelectItem value="REQUESTED">요청됨</SelectItem>
-            <SelectItem value="APPROVED">승인됨</SelectItem>
-            <SelectItem value="ISSUED">발급됨</SelectItem>
-            <SelectItem value="REJECTED">거절됨</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Issuances List */}
-      {loading ? (
-        <div className="text-center py-8 text-muted-foreground">로딩 중...</div>
-      ) : issuances.length === 0 ? (
         <Card>
-          <CardContent className="text-center py-8 text-muted-foreground">
-            발급된 증명서가 없습니다.
-          </CardContent>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">총 발급</CardTitle>
+            <Send className="h-4 w-4 text-purple-500" />
+          </CardHeader>
+          <CardContent><div className="text-2xl font-bold">{issuances.length}</div></CardContent>
         </Card>
-      ) : (
-        <div className="grid gap-4">
-          {issuances.map(issuance => (
-            <Card key={issuance.id}>
-              <CardContent className="pt-6">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Badge variant="outline">{typeLabels[issuance.template.type]}</Badge>
-                      <h3 className="font-semibold">{issuance.template.name}</h3>
-                      <Badge className={statusColors[issuance.status]}>
-                        {statusLabels[issuance.status]}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span>직원 ID: {issuance.employeeId}</span>
-                      {issuance.purpose && <span>목적: {issuance.purpose}</span>}
-                      <span>요청일: {new Date(issuance.createdAt).toLocaleDateString('ko-KR')}</span>
+      </div>
+
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList>
+          <TabsTrigger value="issuances">발급 내역 ({issuances.length})</TabsTrigger>
+          <TabsTrigger value="templates">템플릿 ({templates.length})</TabsTrigger>
+        </TabsList>
+
+        {/* Issuances Tab */}
+        <TabsContent value="issuances" className="space-y-4">
+          <div className="flex justify-end">
+            <Button onClick={() => setIssueDialogOpen(true)} disabled={templates.length === 0}>
+              <Plus className="h-4 w-4 mr-2" />
+              증명서 발급
+            </Button>
+          </div>
+          {loading ? (
+            <div className="text-center py-8 text-muted-foreground">로딩 중...</div>
+          ) : issuances.length === 0 ? (
+            <Card><CardContent className="text-center py-8 text-muted-foreground">발급된 증명서가 없습니다.</CardContent></Card>
+          ) : (
+            issuances.map(issuance => (
+              <Card key={issuance.id}>
+                <CardContent className="pt-6">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <FileCheck2 className="h-4 w-4 text-blue-500" />
+                        <h3 className="font-semibold">{issuance.template.name}</h3>
+                        <Badge className={statusColors[issuance.status]}>{issuance.status}</Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground">직원 ID: {issuance.employeeId}</p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-mono bg-gray-100 px-2 py-1 rounded">{issuance.verificationCode}</span>
+                        <Button size="icon" variant="ghost" onClick={() => copyToClipboard(issuance.verificationCode)}>
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        발급일: {new Date(issuance.issuedAt).toLocaleDateString('ko-KR')}
+                        {issuance.expiresAt && ` | 만료일: ${new Date(issuance.expiresAt).toLocaleDateString('ko-KR')}`}
+                      </p>
                     </div>
                     {issuance.status === 'ISSUED' && (
-                      <div className="flex items-center gap-2 text-sm">
-                        <Shield className="h-3 w-3 text-green-500" />
-                        <span className="font-mono text-xs">{issuance.verificationCode}</span>
-                        {issuance.expiryDate && (
-                          <span className="text-muted-foreground">
-                            (유효기간: {new Date(issuance.expiryDate).toLocaleDateString('ko-KR')})
-                          </span>
-                        )}
+                      <Button size="sm" variant="outline" onClick={() => handleRevokeCertificate(issuance.id)}>
+                        <XCircle className="h-4 w-4 mr-1" />
+                        취소
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </TabsContent>
+
+        {/* Templates Tab */}
+        <TabsContent value="templates" className="space-y-4">
+          <div className="flex justify-end">
+            <Button onClick={() => setTemplateDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              템플릿 추가
+            </Button>
+          </div>
+          {templates.length === 0 ? (
+            <Card><CardContent className="text-center py-8 text-muted-foreground">템플릿이 없습니다.</CardContent></Card>
+          ) : (
+            templates.map(template => (
+              <Card key={template.id}>
+                <CardContent className="pt-6">
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold">{template.name}</h3>
+                        <Badge variant="outline">{template.type}</Badge>
+                        <Badge className={template.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'}>
+                          {template.isActive ? '활성' : '비활성'}
+                        </Badge>
                       </div>
-                    )}
+                      <p className="text-sm text-muted-foreground line-clamp-2">{template.content}</p>
+                    </div>
                   </div>
-                  
-                  <div className="flex items-center gap-2">
-                    {issuance.status === 'REQUESTED' && (
-                      <>
-                        <Button 
-                          size="sm"
-                          onClick={() => updateStatus(issuance.id, 'APPROVED', 'admin')}
-                        >
-                          <CheckCircle className="h-4 w-4 mr-1" />
-                          승인
-                        </Button>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => updateStatus(issuance.id, 'REJECTED')}
-                        >
-                          <XCircle className="h-4 w-4 mr-1" />
-                          거절
-                        </Button>
-                      </>
-                    )}
-                    {issuance.status === 'APPROVED' && (
-                      <Button 
-                        size="sm"
-                        onClick={() => updateStatus(issuance.id, 'ISSUED')}
-                      >
-                        <FileText className="h-4 w-4 mr-1" />
-                        발급
-                      </Button>
-                    )}
-                    {issuance.status === 'ISSUED' && issuance.documentUrl && (
-                      <Button size="sm" variant="outline">
-                        <Download className="h-4 w-4 mr-1" />
-                        다운로드
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </TabsContent>
+      </Tabs>
 
-      {/* Request Form Modal */}
-      {showRequestForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-md mx-4">
-            <CardHeader>
-              <CardTitle>증명서 발급 요청</CardTitle>
-              <CardDescription>증명서를 선택하고 발급을 요청합니다.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <Label>증명서 종류</Label>
-                  <Select
-                    value={formData.templateId}
-                    onValueChange={(v) => setFormData({ ...formData, templateId: v })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="선택하세요" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {templates.map(t => (
-                        <SelectItem key={t.id} value={t.id}>
-                          {t.name} ({typeLabels[t.type]})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+      {/* Create Template Dialog */}
+      <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>증명서 템플릿 추가</DialogTitle></DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2"><Label>이름</Label><Input value={templateForm.name} onChange={(e) => setTemplateForm({ ...templateForm, name: e.target.value })} placeholder="재직증명서" /></div>
+            <div className="space-y-2">
+              <Label>유형</Label>
+              <select className="w-full border rounded-md p-2" value={templateForm.type} onChange={(e) => setTemplateForm({ ...templateForm, type: e.target.value })}>
+                <option value="EMPLOYMENT">재직증명서</option>
+                <option value="CAREER">경력증명서</option>
+                <option value="SALARY">급여명세서</option>
+                <option value="OTHER">기타</option>
+              </select>
+            </div>
+            <div className="space-y-2"><Label>내용 템플릿</Label><Textarea value={templateForm.content} onChange={(e) => setTemplateForm({ ...templateForm, content: e.target.value })} rows={5} placeholder="증명서 내용 (변수: {{name}}, {{position}}, {{department}})" /></div>
+          </div>
+          <DialogFooter><Button variant="outline" onClick={() => setTemplateDialogOpen(false)}>취소</Button><Button onClick={handleCreateTemplate}>추가</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-                <div className="space-y-2">
-                  <Label>직원 ID</Label>
-                  <Input
-                    value={formData.employeeId}
-                    onChange={(e) => setFormData({ ...formData, employeeId: e.target.value })}
-                    placeholder="직원 ID 입력"
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label>발급 목적</Label>
-                  <Input
-                    value={formData.purpose}
-                    onChange={(e) => setFormData({ ...formData, purpose: e.target.value })}
-                    placeholder="예: 대출 신청용"
-                  />
-                </div>
-
-                <div className="flex gap-2 justify-end">
-                  <Button type="button" variant="outline" onClick={() => setShowRequestForm(false)}>
-                    취소
-                  </Button>
-                  <Button type="submit">요청</Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+      {/* Issue Certificate Dialog */}
+      <Dialog open={issueDialogOpen} onOpenChange={setIssueDialogOpen}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>증명서 발급</DialogTitle><DialogDescription>직원에게 증명서를 발급합니다.</DialogDescription></DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label>템플릿</Label>
+              <select className="w-full border rounded-md p-2" value={issueForm.templateId} onChange={(e) => setIssueForm({ ...issueForm, templateId: e.target.value })}>
+                <option value="">선택하세요</option>
+                {templates.filter(t => t.isActive).map(template => (
+                  <option key={template.id} value={template.id}>{template.name}</option>
+                ))}
+              </select>
+            </div>
+            <div className="space-y-2"><Label>직원 ID</Label><Input value={issueForm.employeeId} onChange={(e) => setIssueForm({ ...issueForm, employeeId: e.target.value })} /></div>
+            <div className="space-y-2"><Label>만료일 (선택)</Label><Input type="date" value={issueForm.expiresAt} onChange={(e) => setIssueForm({ ...issueForm, expiresAt: e.target.value })} /></div>
+          </div>
+          <DialogFooter><Button variant="outline" onClick={() => setIssueDialogOpen(false)}>취소</Button><Button onClick={handleIssueCertificate}>발급</Button></DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

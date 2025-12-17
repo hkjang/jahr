@@ -20,6 +20,7 @@ import {
   Database,
   X,
   Briefcase,
+  Sparkles,
 } from "lucide-react";
 
 const menuGroups = [
@@ -87,6 +88,7 @@ const menuGroups = [
   {
     label: "시스템",
     items: [
+      { title: "AI 설정", href: "/admin/ai-settings", icon: Sparkles },
       { title: "권한 관리", href: "/admin/permissions", icon: Shield },
       { title: "코드 관리", href: "/admin/codes", icon: Database },
       { title: "API 관리", href: "/admin/api-management", icon: Settings },
@@ -122,6 +124,7 @@ export function AdminSidebar({ open = true, onClose }: AdminSidebarProps) {
       Shield: "Shield",
       Database: "Database",
       Briefcase: "Briefcase",
+      Sparkles: "Sparkles",
     };
     return iconNames[IconComponent.displayName || IconComponent.name] || "FileCheck";
   };

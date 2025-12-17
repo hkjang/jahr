@@ -2887,3 +2887,193 @@ model CohortAnalysis {
   @@index([cohortType, cohortValue])
   @@index([analysisType])
 }
+
+// ============================================
+// AI PROVIDER INTEGRATION (오프라인망 AI 연동)
+// ============================================
+
+enum AIProviderType {
+  VLLM
+  OLLAMA
+  OPENAI_COMPATIBLE
+}
+
+enum AIProviderStatus {
+  ACTIVE
+  INACTIVE
+  ERROR
+}
+
+enum AIFeatureType {
+  HR_SUMMARY           // 인사 요약
+  AI_RECOMMENDATION    // AI 추천
+  REGULATION_QA        // 규정 QA
+  DOCUMENT_GENERATION  // 문서 생성
+  SENTIMENT_ANALYSIS   // 감정 분석
+  CHATBOT              // HR 챗봇
+}
+
+// AI Provider 설정
+model AIProviderConfig {
+  id              String           @id @default(cuid())
+  name            String
+  type            AIProviderType
+  baseUrl         String           // 내부망 API URL
+  apiKeyEncrypted String?          // 암호화된 API Key
+  isDefault       Boolean          @default(false)
+  status          AIProviderStatus @default(INACTIVE)
+  
+  // 기본 설정
+  defaultModel    String?
+  timeout         Int              @default(30000)  // ms
+  maxTokens       Int              @default(2048)
+  temperature     Float            @default(0.7)
+  streamingEnabled Boolean         @default(true)
+  
+  // Rate Limiting
+  rateLimitPerMinute Int           @default(60)
+  rateLimitPerHour   Int           @default(1000)
+  
+  // 상태
+  lastHealthCheck DateTime?
+  lastError       String?
+  
+  models          AIProviderModel[]
+  callLogs        AICallLog[]
+  
+  createdBy       String
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([type])
+  @@index([isDefault])
+  @@index([status])
+}
+
+// Provider별 모델 목록
+model AIProviderModel {
+  id              String           @id @default(cuid())
+  providerId      String
+  provider        AIProviderConfig @relation(fields: [providerId], references: [id], onDelete: Cascade)
+  
+  modelId         String           // Provider 내 모델 ID
+  displayName     String           // 표시 이름
+  description     String?
+  
+  // 모델 정보
+  contextLength   Int?             // 최대 컨텍스트 길이
+  isAvailable     Boolean          @default(true)
+  capabilities    String[]         // 기능 목록 (chat, completion, embedding 등)
+  
+  // 사용량
+  usageCount      Int              @default(0)
+  lastUsedAt      DateTime?
+  
+  featureMappings AIFeatureModelMapping[]
+  
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@unique([providerId, modelId])
+  @@index([providerId])
+  @@index([isAvailable])
+}
+
+// 기능별 모델 매핑
+model AIFeatureModelMapping {
+  id              String           @id @default(cuid())
+  featureType     AIFeatureType
+  modelId         String
+  model           AIProviderModel  @relation(fields: [modelId], references: [id], onDelete: Cascade)
+  
+  isDefault       Boolean          @default(false)
+  priority        Int              @default(0)
+  
+  // 기능별 설정 오버라이드
+  maxTokensOverride     Int?
+  temperatureOverride   Float?
+  systemPrompt          String?      @db.Text
+  
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@unique([featureType, modelId])
+  @@index([featureType])
+}
+
+// 프롬프트 템플릿
+model AIPromptTemplate {
+  id              String   @id @default(cuid())
+  name            String   @unique
+  featureType     AIFeatureType
+  systemPrompt    String   @db.Text
+  userPromptTemplate String @db.Text  // {{변수}} 형식
+  variables       String[] // 사용 가능한 변수 목록
+  version         Int      @default(1)
+  isActive        Boolean  @default(true)
+  
+  createdBy       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([featureType])
+  @@index([isActive])
+}
+
+// AI 정책 (접근 제어, 제한)
+model AIAccessPolicy {
+  id              String   @id @default(cuid())
+  name            String   @unique
+  description     String?
+  
+  // 대상
+  roleIds         String[] // 허용된 역할
+  featureTypes    AIFeatureType[] // 허용된 기능
+  
+  // 제한
+  dailyLimit      Int?     // 일일 호출 제한
+  monthlyLimit    Int?     // 월간 호출 제한
+  maxTokensPerCall Int?    // 호출당 최대 토큰
+  
+  isActive        Boolean  @default(true)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([isActive])
+}
+
+// AI 호출 로그 (감사용)
+model AICallLog {
+  id              String           @id @default(cuid())
+  providerId      String?
+  provider        AIProviderConfig? @relation(fields: [providerId], references: [id])
+  
+  userId          String
+  featureType     AIFeatureType
+  modelId         String
+  
+  // 요청/응답 (개인정보 마스킹된)
+  requestSummary  String?          // 요청 요약 (마스킹 후)
+  responseLength  Int?             // 응답 길이
+  
+  // 성능
+  latencyMs       Int?
+  tokenUsage      Json?            // { prompt: N, completion: N, total: N }
+  
+  // 상태
+  status          String           // SUCCESS, ERROR, TIMEOUT, RATE_LIMITED
+  errorMessage    String?
+  
+  // 메타데이터
+  ipAddress       String?
+  userAgent       String?
+  
+  createdAt       DateTime         @default(now())
+
+  @@index([userId])
+  @@index([providerId])
+  @@index([featureType])
+  @@index([status])
+  @@index([createdAt])
+}

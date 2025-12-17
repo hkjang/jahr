@@ -203,7 +203,7 @@ export class ExternalAPIService {
       const attendances = await prisma.attendance.findMany({
         where,
         include: {
-          employee: { select: { employeeId: true } },
+          employee: { select: { id: true } },
         },
         orderBy: { date: "desc" },
       });
@@ -266,7 +266,7 @@ export class ExternalAPIService {
       const leaves = await prisma.leave.findMany({
         where,
         include: {
-          employee: { select: { employeeId: true } },
+          employee: { select: { id: true } },
         },
         orderBy: { startDate: "desc" },
       });

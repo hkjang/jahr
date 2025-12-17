@@ -78,6 +78,8 @@ const menuGroups = [
     items: [
       { title: "인사 규정", href: "/admin/policies", icon: FileCheck },
       { title: "증명서", href: "/admin/certificates", icon: FileCheck },
+      { title: "컴플라이언스", href: "/admin/compliance", icon: Shield },
+      { title: "데이터 거버넌스", href: "/admin/data-governance", icon: Database },
     ],
   },
   {
@@ -85,6 +87,7 @@ const menuGroups = [
     items: [
       { title: "권한 관리", href: "/admin/permissions", icon: Shield },
       { title: "코드 관리", href: "/admin/codes", icon: Database },
+      { title: "API 관리", href: "/admin/api-management", icon: Settings },
       { title: "시스템 설정", href: "/admin/settings", icon: Settings },
     ],
   },

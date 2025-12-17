@@ -1277,3 +1277,346 @@ model CertificateIssuance {
   @@index([verificationCode])
 }
 
+// ============================================
+// PHASE 5: LABOR & COMPLIANCE
+// ============================================
+
+enum ContractStatus {
+  ACTIVE
+  EXPIRING_SOON
+  EXPIRED
+  TERMINATED
+  RENEWED
+}
+
+enum AlertSeverity {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AlertType {
+  OVERTIME_LIMIT        // 법정 근로시간 초과
+  CONTRACT_EXPIRY       // 계약 만료
+  COMPLIANCE_VIOLATION  // 컴플라이언스 위반
+  LEGAL_UPDATE         // 법규 변경
+  RISK_DETECTED        // 노무 리스크
+}
+
+// 근로 계약
+model LaborContract {
+  id              String          @id @default(cuid())
+  employeeId      String
+  contractType    String          // 정규직, 계약직, 수습 등
+  startDate       DateTime
+  endDate         DateTime?
+  probationEnd    DateTime?       // 수습 종료일
+  workingHours    Int             @default(40)  // 주간 근무시간
+  status          ContractStatus  @default(ACTIVE)
+  terms           Json?           // 계약 조건
+  documentUrl     String?         // 계약서 URL
+  renewalCount    Int             @default(0)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([employeeId])
+  @@index([status])
+  @@index([endDate])
+}
+
+// 컴플라이언스 규칙
+model ComplianceRule {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  ruleType        AlertType
+  threshold       Json     // 규칙 임계값 (예: maxOvertimeHours: 12)
+  isActive        Boolean  @default(true)
+  alerts          ComplianceAlert[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// 컴플라이언스 경고
+model ComplianceAlert {
+  id              String        @id @default(cuid())
+  ruleId          String?
+  rule            ComplianceRule? @relation(fields: [ruleId], references: [id])
+  type            AlertType
+  severity        AlertSeverity
+  title           String
+  message         String        @db.Text
+  employeeId      String?
+  data            Json?         // 관련 데이터
+  isResolved      Boolean       @default(false)
+  resolvedBy      String?
+  resolvedAt      DateTime?
+  resolutionNotes String?
+  createdAt       DateTime      @default(now())
+
+  @@index([type])
+  @@index([severity])
+  @@index([isResolved])
+  @@index([employeeId])
+}
+
+// 법규 업데이트
+model LegalUpdate {
+  id              String   @id @default(cuid())
+  title           String
+  description     String   @db.Text
+  effectiveDate   DateTime
+  category        String   // 근로기준법, 산업안전법 등
+  sourceUrl       String?
+  isReviewed      Boolean  @default(false)
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  impactNotes     String?  @db.Text
+  createdAt       DateTime @default(now())
+
+  @@index([effectiveDate])
+  @@index([isReviewed])
+}
+
+// ============================================
+// PHASE 6: DATA GOVERNANCE & QUALITY
+// ============================================
+
+enum DataIssueType {
+  MISSING_DATA      // 결측치
+  INCONSISTENCY     // 정합성 오류
+  DUPLICATE         // 중복 데이터
+  INVALID_FORMAT    // 형식 오류
+  POLICY_VIOLATION  // 정책 위반
+}
+
+enum DeletionRequestStatus {
+  PENDING
+  APPROVED
+  COMPLETED
+  REJECTED
+}
+
+// 데이터 스냅샷 (변경 전후 기록)
+model DataSnapshot {
+  id            String   @id @default(cuid())
+  entityType    String   // Employee, Organization 등
+  entityId      String
+  operation     String   // CREATE, UPDATE, DELETE
+  beforeData    Json?
+  afterData     Json?
+  changedBy     String
+  changedAt     DateTime @default(now())
+  reason        String?
+
+  @@index([entityType, entityId])
+  @@index([changedAt])
+  @@index([changedBy])
+}
+
+// 데이터 품질 이슈
+model DataQualityIssue {
+  id            String        @id @default(cuid())
+  issueType     DataIssueType
+  entityType    String
+  entityId      String
+  fieldName     String
+  description   String
+  severity      String        // LOW, MEDIUM, HIGH
+  isResolved    Boolean       @default(false)
+  resolvedBy    String?
+  resolvedAt    DateTime?
+  createdAt     DateTime      @default(now())
+
+  @@index([issueType])
+  @@index([isResolved])
+  @@index([entityType, entityId])
+}
+
+// 데이터 삭제 요청 (GDPR)
+model DataDeletionRequest {
+  id              String                @id @default(cuid())
+  requesterId     String                // 요청자 ID
+  targetUserId    String                // 삭제 대상 사용자
+  reason          String
+  status          DeletionRequestStatus @default(PENDING)
+  processedBy     String?
+  processedAt     DateTime?
+  deletedEntities Json?                 // 삭제된 엔티티 목록
+  createdAt       DateTime              @default(now())
+
+  @@index([status])
+  @@index([targetUserId])
+}
+
+// 민감 데이터 마스킹 규칙
+model DataMaskingRule {
+  id            String   @id @default(cuid())
+  name          String
+  entityType    String   // 대상 엔티티
+  fieldName     String   // 대상 필드
+  maskingType   String   // FULL, PARTIAL, HASH, ENCRYPT
+  pattern       String?  // 마스킹 패턴 (예: ***-****-****)
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([entityType, fieldName])
+}
+
+// ============================================
+// PHASE 7: API & PLATFORM EXTENSION
+// ============================================
+
+// API 클라이언트 (OAuth2)
+model ApiClient {
+  id              String   @id @default(cuid())
+  name            String
+  clientId        String   @unique
+  clientSecret    String
+  description     String?
+  allowedScopes   String[] // 허용된 권한 범위
+  allowedOrigins  String[] // CORS 허용 도메인
+  isActive        Boolean  @default(true)
+  rateLimitPerMin Int      @default(60)
+  logs            ApiLog[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([clientId])
+}
+
+// Webhook 설정
+model Webhook {
+  id            String   @id @default(cuid())
+  name          String
+  url           String
+  events        String[] // 구독 이벤트 목록
+  secret        String?  // 검증용 시크릿
+  isActive      Boolean  @default(true)
+  lastTriggered DateTime?
+  failureCount  Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// API 호출 로그
+model ApiLog {
+  id            String    @id @default(cuid())
+  clientId      String?
+  client        ApiClient? @relation(fields: [clientId], references: [id])
+  method        String
+  endpoint      String
+  statusCode    Int
+  requestBody   Json?
+  responseTime  Int       // ms
+  ipAddress     String?
+  userAgent     String?
+  error         String?
+  createdAt     DateTime  @default(now())
+
+  @@index([clientId])
+  @@index([endpoint])
+  @@index([createdAt])
+}
+
+// 외부 연동 설정 (ERP, 그룹웨어 등)
+model ExternalIntegration {
+  id            String   @id @default(cuid())
+  name          String
+  type          String   // ERP, GROUPWARE, SLACK, etc.
+  config        Json     // 연동 설정 정보
+  isActive      Boolean  @default(true)
+  lastSyncAt    DateTime?
+  syncStatus    String?  // SUCCESS, FAILED, IN_PROGRESS
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// ============================================
+// PHASE 8: OPERATIONAL STABILITY & SRE
+// ============================================
+
+enum IncidentSeverity {
+  P1_CRITICAL
+  P2_HIGH
+  P3_MEDIUM
+  P4_LOW
+}
+
+enum IncidentStatus {
+  OPEN
+  INVESTIGATING
+  IDENTIFIED
+  MONITORING
+  RESOLVED
+}
+
+// 장애/인시던트 관리
+model Incident {
+  id              String           @id @default(cuid())
+  title           String
+  description     String           @db.Text
+  severity        IncidentSeverity
+  status          IncidentStatus   @default(OPEN)
+  affectedSystems String[]
+  assignedTo      String?
+  startedAt       DateTime         @default(now())
+  resolvedAt      DateTime?
+  rootCause       String?          @db.Text
+  resolution      String?          @db.Text
+  timeline        Json?            // 타임라인 이벤트
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([severity])
+  @@index([status])
+  @@index([startedAt])
+}
+
+// 성능 메트릭
+model PerformanceMetric {
+  id            String   @id @default(cuid())
+  endpoint      String
+  method        String
+  responseTime  Int      // ms
+  statusCode    Int
+  timestamp     DateTime @default(now())
+  metadata      Json?
+
+  @@index([endpoint])
+  @@index([timestamp])
+}
+
+// 백업 스케줄
+model BackupSchedule {
+  id            String   @id @default(cuid())
+  name          String
+  type          String   // FULL, INCREMENTAL, DIFFERENTIAL
+  schedule      String   // Cron expression
+  retentionDays Int      @default(30)
+  isActive      Boolean  @default(true)
+  lastRunAt     DateTime?
+  lastStatus    String?  // SUCCESS, FAILED
+  nextRunAt     DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+// 배포 기록
+model DeploymentRecord {
+  id            String   @id @default(cuid())
+  version       String
+  environment   String   // production, staging, development
+  deployedBy    String
+  deployedAt    DateTime @default(now())
+  status        String   // SUCCESS, FAILED, ROLLBACK
+  changelog     String?  @db.Text
+  rollbackFrom  String?  // 롤백 시 이전 버전
+  duration      Int?     // 배포 소요 시간 (초)
+
+  @@index([environment])
+  @@index([deployedAt])
+}
+

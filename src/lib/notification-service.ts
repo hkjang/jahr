@@ -175,9 +175,9 @@ export class NotificationService {
   ) {
     const template = NOTIFICATION_TEMPLATES[templateKey];
     
-    // 변수 치환
-    let title = template.title;
-    let message = template.message;
+    // 변수 치환 (string으로 명시적 변환)
+    let title: string = template.title;
+    let message: string = template.message;
     
     for (const [key, value] of Object.entries(variables)) {
       const placeholder = `\${${key}}`;
@@ -189,7 +189,7 @@ export class NotificationService {
       userId,
       title,
       message,
-      channels: overrideChannels || template.channels,
+      channels: overrideChannels || [...template.channels],
     });
   }
 
@@ -227,7 +227,7 @@ export class NotificationService {
     });
 
     return this.sendToMany(
-      users.map((u) => u.id),
+      users.map((u: { id: string }) => u.id),
       payload
     );
   }
@@ -246,7 +246,7 @@ export class NotificationService {
     });
 
     return this.sendToMany(
-      employees.map((e) => e.userId),
+      employees.map((e: { userId: string }) => e.userId),
       payload
     );
   }

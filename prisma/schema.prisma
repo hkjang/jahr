@@ -1706,3 +1706,1184 @@ model OrganizationHealthIndex {
   @@index([period])
 }
 
+// ============================================
+// PHASE 10: TALENT LIFECYCLE MANAGEMENT
+// ============================================
+
+enum OnboardingStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  BLOCKED
+}
+
+enum TaskCategory {
+  EQUIPMENT        // 장비 지급
+  SECURITY         // 보안 교육
+  ACCOUNT          // 계정 발급
+  TRAINING         // 교육
+  DOCUMENTATION    // 문서 작성
+  INTRODUCTION     // 소개/인사
+}
+
+enum OffboardingStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  PENDING_APPROVAL
+}
+
+// 온보딩 체크리스트 템플릿
+model OnboardingTemplate {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  targetJobId     String?  // 직무별 템플릿
+  targetOrgId     String?  // 조직별 템플릿
+  isDefault       Boolean  @default(false)
+  tasks           OnboardingTemplateTask[]
+  checklists      OnboardingChecklist[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([targetJobId])
+  @@index([targetOrgId])
+}
+
+// 온보딩 템플릿 태스크
+model OnboardingTemplateTask {
+  id              String       @id @default(cuid())
+  templateId      String
+  template        OnboardingTemplate @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  category        TaskCategory
+  name            String
+  description     String?
+  daysFromStart   Int          // 입사일 기준 예정일 (D+N)
+  assigneeRole    String?      // 담당자 역할 (HR, IT, Manager 등)
+  isRequired      Boolean      @default(true)
+  sortOrder       Int          @default(0)
+
+  @@index([templateId])
+}
+
+// 직원별 온보딩 체크리스트
+model OnboardingChecklist {
+  id              String           @id @default(cuid())
+  employeeId      String           @unique
+  templateId      String?
+  template        OnboardingTemplate? @relation(fields: [templateId], references: [id])
+  status          OnboardingStatus @default(NOT_STARTED)
+  startDate       DateTime
+  targetEndDate   DateTime?
+  completedDate   DateTime?
+  tasks           OnboardingTask[]
+  mentorAssignment MentorAssignment?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([status])
+  @@index([startDate])
+}
+
+// 온보딩 개별 태스크
+model OnboardingTask {
+  id              String           @id @default(cuid())
+  checklistId     String
+  checklist       OnboardingChecklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+  category        TaskCategory
+  name            String
+  description     String?
+  dueDate         DateTime?
+  assigneeId      String?          // 담당자 ID
+  assigneeName    String?          // 담당자 이름
+  status          OnboardingStatus @default(NOT_STARTED)
+  completedAt     DateTime?
+  completedBy     String?
+  notes           String?
+  attachments     Json?            // 첨부파일 목록
+  sortOrder       Int              @default(0)
+
+  @@index([checklistId])
+  @@index([status])
+  @@index([assigneeId])
+}
+
+// 멘토 배정
+model MentorAssignment {
+  id              String   @id @default(cuid())
+  checklistId     String   @unique
+  checklist       OnboardingChecklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+  menteeId        String   // 신입 직원
+  mentorId        String   // 멘토 직원
+  matchScore      Float?   // 매칭 점수 (직무/경력 기반)
+  matchReason     String?  // 매칭 근거
+  startDate       DateTime
+  endDate         DateTime?
+  feedback        MentorFeedback[]
+  status          String   @default("ACTIVE") // ACTIVE, COMPLETED, CANCELLED
+  createdAt       DateTime @default(now())
+
+  @@index([menteeId])
+  @@index([mentorId])
+}
+
+// 멘토링 피드백
+model MentorFeedback {
+  id              String           @id @default(cuid())
+  assignmentId    String
+  assignment      MentorAssignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  fromType        String           // MENTOR or MENTEE
+  rating          Int              // 1-5
+  feedback        String?
+  createdAt       DateTime         @default(now())
+
+  @@index([assignmentId])
+}
+
+// 오프보딩 체크리스트
+model OffboardingChecklist {
+  id              String             @id @default(cuid())
+  employeeId      String             @unique
+  status          OffboardingStatus  @default(NOT_STARTED)
+  lastWorkingDate DateTime
+  reason          String?            // 퇴사 사유
+  tasks           OffboardingTask[]
+  knowledgeTransfers KnowledgeTransfer[]
+  exitInterview   ExitInterview?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@index([status])
+  @@index([lastWorkingDate])
+}
+
+// 오프보딩 태스크
+model OffboardingTask {
+  id              String              @id @default(cuid())
+  checklistId     String
+  checklist       OffboardingChecklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+  category        String              // EQUIPMENT_RETURN, ACCESS_REVOKE, HANDOVER, DOCUMENTATION
+  name            String
+  description     String?
+  dueDate         DateTime?
+  assigneeId      String?
+  status          OffboardingStatus   @default(NOT_STARTED)
+  completedAt     DateTime?
+  completedBy     String?
+  notes           String?
+  sortOrder       Int                 @default(0)
+
+  @@index([checklistId])
+  @@index([status])
+}
+
+// 지식 인수인계
+model KnowledgeTransfer {
+  id              String   @id @default(cuid())
+  checklistId     String
+  checklist       OffboardingChecklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+  title           String
+  description     String?  @db.Text
+  content         String   @db.Text    // 인수인계 문서 내용
+  recipientId     String              // 인수자
+  status          String   @default("DRAFT") // DRAFT, SUBMITTED, APPROVED
+  attachments     Json?
+  approvedBy      String?
+  approvedAt      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([checklistId])
+  @@index([recipientId])
+}
+
+// 퇴직 인터뷰
+model ExitInterview {
+  id              String   @id @default(cuid())
+  checklistId     String   @unique
+  checklist       OffboardingChecklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+  interviewerId   String
+  scheduledDate   DateTime?
+  conductedDate   DateTime?
+  responses       Json?    // 인터뷰 응답
+  overallSatisfaction Int? // 1-5
+  wouldRecommend  Boolean?
+  improvementSuggestions String? @db.Text
+  confidentialNotes String? @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ============================================
+// PHASE 11: SKILL GRAPH MANAGEMENT
+// ============================================
+
+enum SkillCategory {
+  TECHNICAL         // 기술 역량
+  BUSINESS          // 업무 역량
+  SOFT_SKILL        // 소프트 스킬
+  LEADERSHIP        // 리더십
+  DOMAIN            // 도메인 지식
+  CERTIFICATION     // 자격증/인증
+}
+
+enum SkillLevel {
+  NOVICE            // 초급 (1)
+  BEGINNER          // 입문 (2)
+  INTERMEDIATE      // 중급 (3)
+  ADVANCED          // 고급 (4)
+  EXPERT            // 전문가 (5)
+}
+
+enum AssessmentType {
+  SELF              // 자기 평가
+  MANAGER           // 관리자 평가
+  PEER              // 동료 평가
+  CERTIFICATION     // 자격증 취득
+  PROJECT           // 프로젝트 수행
+  TRAINING          // 교육 이수
+}
+
+// 스킬 사전 (표준 스킬 정의)
+model SkillTaxonomy {
+  id              String        @id @default(cuid())
+  code            String        @unique
+  name            String
+  nameEn          String?       // 영문명
+  category        SkillCategory
+  description     String?
+  parentId        String?       // 상위 스킬
+  parent          SkillTaxonomy? @relation("SkillHierarchy", fields: [parentId], references: [id])
+  children        SkillTaxonomy[] @relation("SkillHierarchy")
+  keywords        String[]      // 검색 키워드
+  isActive        Boolean       @default(true)
+  employeeSkills  EmployeeSkill[]
+  jobRequirements JobRequiredSkill[]
+  projectSkills   ProjectRequiredSkill[]
+  relatedCourses  CourseSkill[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([category])
+  @@index([parentId])
+}
+
+// 직원별 스킬 맵
+model EmployeeSkill {
+  id              String        @id @default(cuid())
+  employeeId      String
+  skillId         String
+  skill           SkillTaxonomy @relation(fields: [skillId], references: [id])
+  currentLevel    SkillLevel
+  targetLevel     SkillLevel?   // 목표 레벨
+  yearsExperience Float?        // 경력 년수
+  lastAssessed    DateTime      @default(now())
+  assessments     SkillAssessment[]
+  endorsements    SkillEndorsement[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@unique([employeeId, skillId])
+  @@index([employeeId])
+  @@index([skillId])
+  @@index([currentLevel])
+}
+
+// 스킬 평가 이력
+model SkillAssessment {
+  id              String         @id @default(cuid())
+  employeeSkillId String
+  employeeSkill   EmployeeSkill  @relation(fields: [employeeSkillId], references: [id], onDelete: Cascade)
+  assessmentType  AssessmentType
+  previousLevel   SkillLevel?
+  assessedLevel   SkillLevel
+  assessorId      String?        // 평가자
+  evidence        String?        // 근거 URL 또는 설명
+  notes           String?
+  assessedAt      DateTime       @default(now())
+
+  @@index([employeeSkillId])
+  @@index([assessedAt])
+}
+
+// 스킬 보증 (동료 추천)
+model SkillEndorsement {
+  id              String        @id @default(cuid())
+  employeeSkillId String
+  employeeSkill   EmployeeSkill @relation(fields: [employeeSkillId], references: [id], onDelete: Cascade)
+  endorserId      String
+  relationship    String        // 동료, 협업자, 관리자 등
+  comment         String?
+  endorsedAt      DateTime      @default(now())
+
+  @@unique([employeeSkillId, endorserId])
+  @@index([employeeSkillId])
+}
+
+// 직무별 필수 스킬
+model JobRequiredSkill {
+  id              String        @id @default(cuid())
+  jobId           String
+  skillId         String
+  skill           SkillTaxonomy @relation(fields: [skillId], references: [id])
+  requiredLevel   SkillLevel
+  importance      String        @default("REQUIRED") // REQUIRED, PREFERRED, NICE_TO_HAVE
+  weight          Float         @default(1.0)
+
+  @@unique([jobId, skillId])
+  @@index([jobId])
+  @@index([skillId])
+}
+
+// 스킬 갭 분석
+model SkillGapAnalysis {
+  id              String   @id @default(cuid())
+  employeeId      String
+  jobId           String   // 비교 대상 직무
+  analysisDate    DateTime @default(now())
+  overallGapScore Float    // 전체 갭 점수 (0-100, 낮을수록 좋음)
+  skillGaps       Json     // 스킬별 갭 상세
+  recommendations Json?    // 추천 교육/경험
+  priority        String   @default("MEDIUM") // HIGH, MEDIUM, LOW
+
+  @@index([employeeId])
+  @@index([jobId])
+  @@index([analysisDate])
+}
+
+// 프로젝트 필요 스킬
+model ProjectRequiredSkill {
+  id              String        @id @default(cuid())
+  projectId       String        // 내부 프로젝트 ID
+  skillId         String
+  skill           SkillTaxonomy @relation(fields: [skillId], references: [id])
+  requiredLevel   SkillLevel
+  headcount       Int           @default(1)
+
+  @@unique([projectId, skillId])
+  @@index([projectId])
+}
+
+// 교육 과정-스킬 매핑
+model CourseSkill {
+  id              String        @id @default(cuid())
+  courseId        String
+  skillId         String
+  skill           SkillTaxonomy @relation(fields: [skillId], references: [id])
+  targetLevel     SkillLevel    // 이수 후 도달 가능 레벨
+
+  @@unique([courseId, skillId])
+  @@index([courseId])
+}
+
+// 프로젝트 인력 추천
+model StaffingRecommendation {
+  id              String   @id @default(cuid())
+  projectId       String
+  employeeId      String
+  matchScore      Float    // 0-100
+  matchDetails    Json     // 스킬별 매칭 상세
+  availability    String?  // 가용성 상태
+  status          String   @default("RECOMMENDED") // RECOMMENDED, ASSIGNED, DECLINED
+  recommendedAt   DateTime @default(now())
+
+  @@index([projectId])
+  @@index([employeeId])
+  @@index([matchScore])
+}
+
+// ============================================
+// PHASE 12: INTERNAL TALENT MARKETPLACE
+// ============================================
+
+enum OpportunityType {
+  FULL_TIME         // 정규 포지션
+  PROJECT           // 프로젝트 참여
+  TASK_FORCE        // TF 운영
+  PILOT             // 파일럿 프로그램
+  SECONDMENT        // 파견
+  ROTATION          // 순환 근무
+}
+
+enum OpportunityStatus {
+  DRAFT
+  OPEN
+  CLOSED
+  FILLED
+  CANCELLED
+}
+
+enum InternalAppStatus {
+  APPLIED
+  UNDER_REVIEW
+  INTERVIEW
+  SELECTED
+  NOT_SELECTED
+  WITHDRAWN
+}
+
+// 내부 공모 (포지션/프로젝트)
+model InternalOpportunity {
+  id              String            @id @default(cuid())
+  type            OpportunityType
+  title           String
+  description     String            @db.Text
+  organizationId  String
+  positionId      String?
+  jobId           String?
+  requiredSkills  Json              // 필요 스킬 및 레벨
+  preferredSkills Json?             // 우대 스킬
+  requirements    Json?             // 기타 요구사항
+  duration        String?           // 기간 (프로젝트의 경우)
+  hoursPerWeek    Int?              // 주당 시간 (겸직의 경우)
+  location        String?
+  benefits        String?           @db.Text
+  openings        Int               @default(1)
+  filledCount     Int               @default(0)
+  status          OpportunityStatus @default(DRAFT)
+  publishedAt     DateTime?
+  closingDate     DateTime?
+  applications    InternalApplication[]
+  matches         OpportunityMatch[]
+  createdBy       String
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([type])
+  @@index([status])
+  @@index([organizationId])
+  @@index([closingDate])
+}
+
+// 내부 지원서
+model InternalApplication {
+  id              String                @id @default(cuid())
+  opportunityId   String
+  opportunity     InternalOpportunity   @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  applicantId     String                // 지원자 직원 ID
+  status          InternalAppStatus     @default(APPLIED)
+  coverLetter     String?               @db.Text
+  skillMatch      Json?                 // 스킬 매칭 분석 결과
+  matchScore      Float?                // 매칭 점수
+  managerApproval Boolean               @default(false) // 현재 소속 관리자 승인
+  interviews      InternalInterview[]
+  notes           String?
+  appliedAt       DateTime              @default(now())
+  decidedAt       DateTime?
+  decisionBy      String?
+  decisionReason  String?
+
+  @@unique([opportunityId, applicantId])
+  @@index([opportunityId])
+  @@index([applicantId])
+  @@index([status])
+}
+
+// 내부 면접
+model InternalInterview {
+  id              String              @id @default(cuid())
+  applicationId   String
+  application     InternalApplication @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  interviewerId   String
+  scheduledAt     DateTime
+  completedAt     DateTime?
+  rating          Int?                // 1-5
+  feedback        String?             @db.Text
+  recommendation  String?             // HIRE, NO_HIRE, MAYBE
+
+  @@index([applicationId])
+  @@index([interviewerId])
+}
+
+// 자동 매칭 결과
+model OpportunityMatch {
+  id              String              @id @default(cuid())
+  opportunityId   String
+  opportunity     InternalOpportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+  employeeId      String
+  matchScore      Float               // 0-100
+  matchBreakdown  Json                // 스킬별 매칭 상세
+  isNotified      Boolean             @default(false) // 직원에게 알림 발송 여부
+  matchedAt       DateTime            @default(now())
+
+  @@unique([opportunityId, employeeId])
+  @@index([opportunityId])
+  @@index([employeeId])
+  @@index([matchScore])
+}
+
+// 경력 이동 이력
+model CareerMovement {
+  id              String   @id @default(cuid())
+  employeeId      String
+  movementType    String   // TRANSFER, PROJECT, SECONDMENT, ROTATION
+  fromOrgId       String
+  toOrgId         String
+  fromJobId       String?
+  toJobId         String?
+  opportunityId   String?  // 관련 내부 공모
+  startDate       DateTime
+  endDate         DateTime?
+  isPermanent     Boolean  @default(true)
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  @@index([employeeId])
+  @@index([fromOrgId])
+  @@index([toOrgId])
+  @@index([startDate])
+}
+
+// ============================================
+// PHASE 13: AI DECISION SUPPORT
+// ============================================
+
+enum RecommendationType {
+  PROMOTION
+  SALARY_ADJUSTMENT
+  PERFORMANCE_INTERVENTION
+  DEVELOPMENT_PLAN
+  TEAM_RESTRUCTURE
+  RETENTION_ACTION
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum SignalType {
+  ENGAGEMENT_DROP      // 참여도 하락
+  PERFORMANCE_DECLINE  // 성과 하락
+  ABSENCE_PATTERN      // 결근 패턴
+  OVERTIME_EXCESS      // 과도한 초과근무
+  TRAINING_SKIP        // 교육 미이수
+  PEER_CONFLICT        // 동료 갈등
+  COMPENSATION_GAP     // 보상 격차
+  CAREER_STALL         // 경력 정체
+}
+
+// 승진 추천
+model PromotionRecommendation {
+  id              String   @id @default(cuid())
+  employeeId      String
+  currentPositionId String
+  recommendedPositionId String
+  confidenceScore Float    // 0-100
+  factorAnalysis  Json     // 분석 요인 상세
+  performanceScore Float?
+  tenureMonths    Int?
+  skillReadiness  Float?   // 스킬 준비도
+  leadershipScore Float?
+  comparativePlacement Json? // 동기 대비 위치
+  recommendation  String   // STRONG_RECOMMEND, RECOMMEND, HOLD, NOT_READY
+  explanation     String   @db.Text  // 설명 가능한 근거
+  status          String   @default("PENDING") // PENDING, APPROVED, REJECTED, EXECUTED
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  reviewNotes     String?
+  generatedAt     DateTime @default(now())
+
+  @@index([employeeId])
+  @@index([recommendation])
+  @@index([generatedAt])
+}
+
+// 보상 시뮬레이션
+model CompensationSimulation {
+  id              String   @id @default(cuid())
+  simulationType  String   // INDIVIDUAL, TEAM, ORGANIZATION
+  targetId        String   // 대상 ID (직원/팀/조직)
+  currentCompensation Json
+  proposedCompensation Json
+  marketComparison Json    // 시장 대비 분석
+  equityAnalysis  Json     // 공정성 분석
+  budgetImpact    Json     // 예산 영향
+  riskAssessment  Json?    // 리스크 평가
+  alternativeScenarios Json? // 대안 시나리오
+  fairnessScore   Float    // 공정성 점수 (0-100)
+  explanation     String   @db.Text
+  createdBy       String
+  createdAt       DateTime @default(now())
+
+  @@index([simulationType])
+  @@index([targetId])
+}
+
+// 이탈 시그널
+model AttritionSignal {
+  id              String     @id @default(cuid())
+  employeeId      String
+  signalType      SignalType
+  signalStrength  Float      // 0-100 (강도)
+  detectedAt      DateTime   @default(now())
+  dataPoints      Json       // 근거 데이터
+  trend           String?    // INCREASING, STABLE, DECREASING
+  isAcknowledged  Boolean    @default(false)
+  acknowledgedBy  String?
+  acknowledgedAt  DateTime?
+  actionTaken     String?
+  expiresAt       DateTime?  // 시그널 만료 시점
+
+  @@index([employeeId])
+  @@index([signalType])
+  @@index([detectedAt])
+  @@index([signalStrength])
+}
+
+// 조직/팀 리스크
+model TeamRiskIndicator {
+  id              String    @id @default(cuid())
+  organizationId  String
+  riskType        String    // ATTRITION_CLUSTER, PERFORMANCE_DECLINE, OVERWORK, CONFLICT
+  riskLevel       RiskLevel
+  riskScore       Float     // 0-100
+  affectedEmployees Json    // 영향 받는 직원 목록
+  indicators      Json      // 리스크 지표 상세
+  suggestedActions Json     // 권고 조치
+  explanation     String    @db.Text
+  detectedAt      DateTime  @default(now())
+  resolvedAt      DateTime?
+  resolution      String?
+
+  @@index([organizationId])
+  @@index([riskType])
+  @@index([riskLevel])
+  @@index([detectedAt])
+}
+
+// AI 판단 설명
+model AIDecisionExplanation {
+  id              String   @id @default(cuid())
+  decisionType    RecommendationType
+  relatedEntityId String   // 관련 추천/분석 ID
+  modelVersion    String
+  inputFeatures   Json     // 입력 특성
+  featureImportance Json   // 특성 중요도
+  decisionPath    Json     // 결정 경로 (트리 기반)
+  counterfactuals Json?    // 반사실적 설명 (무엇이 달랐다면...)
+  confidenceBreakdown Json // 신뢰도 상세
+  biasCheck       Json?    // 편향 검사 결과
+  humanReadable   String   @db.Text  // 사람이 읽기 쉬운 설명
+  createdAt       DateTime @default(now())
+
+  @@index([decisionType])
+  @@index([relatedEntityId])
+  @@index([createdAt])
+}
+
+// AI 모델 버전 관리
+model AIModelRegistry {
+  id              String   @id @default(cuid())
+  modelName       String
+  version         String
+  purpose         String   // 용도 설명
+  algorithm       String   // 알고리즘 유형
+  trainingData    Json     // 학습 데이터 정보
+  performanceMetrics Json  // 성능 지표
+  isActive        Boolean  @default(true)
+  deployedAt      DateTime @default(now())
+  retiredAt       DateTime?
+
+  @@unique([modelName, version])
+  @@index([modelName])
+  @@index([isActive])
+}
+
+// ============================================
+// PHASE 14: AUDIT & DISPUTE RESOLUTION
+// ============================================
+
+enum DisputeStatus {
+  REPORTED
+  INVESTIGATING
+  MEDIATION
+  RESOLUTION
+  CLOSED
+  ESCALATED
+}
+
+enum EvidenceType {
+  DOCUMENT
+  EMAIL_THREAD
+  SYSTEM_LOG
+  SCREENSHOT
+  TESTIMONY
+  POLICY_REFERENCE
+  TIMELINE
+}
+
+// HR 결정 로그 (자동 기록)
+model HRDecisionLog {
+  id              String   @id @default(cuid())
+  decisionType    String   // HIRE, FIRE, PROMOTE, COMPENSATE, DISCIPLINE, TRANSFER
+  relatedEntityType String // Employee, Salary, Appointment 등
+  relatedEntityId String
+  decisionMaker   String   // 결정자 ID
+  decisionMakerRole String // 결정자 역할
+  decision        String   // 결정 내용
+  reasoning       String?  @db.Text  // 결정 근거
+  supportingData  Json     // 지원 데이터
+  policyReference String?  // 참조 정책
+  approvalChain   Json?    // 승인 결재선
+  effectiveDate   DateTime
+  systemContext   Json     // 시스템 컨텍스트 (IP, 세션 등)
+  createdAt       DateTime @default(now())
+
+  @@index([decisionType])
+  @@index([relatedEntityType, relatedEntityId])
+  @@index([decisionMaker])
+  @@index([effectiveDate])
+  @@index([createdAt])
+}
+
+// 분쟁/이슈 케이스
+model DisputeCase {
+  id              String        @id @default(cuid())
+  caseNumber      String        @unique
+  title           String
+  description     String        @db.Text
+  category        String        // DISCRIMINATION, HARASSMENT, WRONGFUL_TERMINATION, COMPENSATION, OTHER
+  reporterId      String?       // 신고자 (익명 가능)
+  isAnonymous     Boolean       @default(false)
+  involvedParties Json          // 관련자 목록
+  status          DisputeStatus @default(REPORTED)
+  priority        String        @default("MEDIUM")
+  assignedTo      String?       // 담당자
+  timeline        DisputeTimelineEvent[]
+  evidences       EvidenceItem[]
+  resolution      String?       @db.Text
+  resolutionDate  DateTime?
+  legalReviewRequired Boolean   @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([status])
+  @@index([category])
+  @@index([assignedTo])
+  @@index([createdAt])
+}
+
+// 분쟁 타임라인 이벤트
+model DisputeTimelineEvent {
+  id              String      @id @default(cuid())
+  caseId          String
+  case            DisputeCase @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  eventDate       DateTime
+  eventType       String      // REPORTED, ASSIGNED, INVESTIGATION, MEETING, EVIDENCE_ADDED, STATUS_CHANGE, RESOLUTION
+  title           String
+  description     String?     @db.Text
+  actorId         String?
+  isPrivate       Boolean     @default(false) // 법무팀만 볼 수 있는 이벤트
+  attachments     Json?
+  createdAt       DateTime    @default(now())
+
+  @@index([caseId])
+  @@index([eventDate])
+}
+
+// 증거 자료
+model EvidenceItem {
+  id              String       @id @default(cuid())
+  caseId          String
+  case            DisputeCase  @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  type            EvidenceType
+  title           String
+  description     String?
+  content         String?      @db.Text  // 텍스트 증거
+  fileUrl         String?      // 파일 증거
+  sourceSystem    String?      // 출처 시스템
+  originalTimestamp DateTime?  // 원본 타임스탬프
+  verificationStatus String    @default("UNVERIFIED") // UNVERIFIED, VERIFIED, DISPUTED
+  addedBy         String
+  addedAt         DateTime     @default(now())
+
+  @@index([caseId])
+  @@index([type])
+}
+
+// 감사 증빙 패키지
+model EvidencePackage {
+  id              String   @id @default(cuid())
+  name            String
+  purpose         String   // AUDIT, LEGAL_REVIEW, EXTERNAL_SUBMISSION
+  relatedCaseId   String?
+  requestedBy     String
+  requestedFor    String?  // 감사 기관/법무 담당자
+  dateRange       Json?    // 대상 기간
+  includesEntities Json    // 포함된 엔티티 목록
+  generatedFiles  Json     // 생성된 파일 목록
+  checksum        String?  // 무결성 검증용
+  expiresAt       DateTime?
+  downloadCount   Int      @default(0)
+  lastDownloadAt  DateTime?
+  createdAt       DateTime @default(now())
+
+  @@index([purpose])
+  @@index([relatedCaseId])
+}
+
+// 과거 권한 상태 스냅샷
+model AccessStateSnapshot {
+  id              String   @id @default(cuid())
+  userId          String
+  snapshotDate    DateTime
+  roles           Json     // 역할 목록
+  permissions     Json     // 권한 목록
+  organizationAccess Json  // 조직 접근 권한
+  dataAccessLevels Json    // 데이터 접근 수준
+  activeSession   Json?    // 활성 세션 정보
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+  @@index([snapshotDate])
+}
+
+// 법무팀 전용 뷰 접근
+model LegalTeamAccess {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  accessLevel     String   // VIEW_ONLY, FULL_ACCESS
+  accessibleCases String[] // 접근 가능 케이스 ID (빈 배열 = 전체)
+  grantedBy       String
+  grantedAt       DateTime @default(now())
+  expiresAt       DateTime?
+  isActive        Boolean  @default(true)
+
+  @@index([userId])
+  @@index([isActive])
+}
+
+// ============================================
+// PHASE 15: BATCH PROCESSING & SEARCH
+// ============================================
+
+enum BatchJobStatus {
+  PENDING
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum BatchJobType {
+  SALARY_CALCULATION    // 급여 일괄 계산
+  LEAVE_GRANT          // 연차 일괄 부여
+  EVALUATION_INIT      // 평가 일괄 생성
+  DATA_SYNC            // 데이터 동기화
+  REPORT_GENERATION    // 리포트 생성
+  INDEX_UPDATE         // 인덱스 갱신
+  NOTIFICATION_SEND    // 알림 일괄 발송
+}
+
+// 배치 작업
+model BatchJob {
+  id              String         @id @default(cuid())
+  type            BatchJobType
+  name            String
+  description     String?
+  parameters      Json           // 작업 파라미터
+  targetCount     Int?           // 대상 건수
+  processedCount  Int            @default(0)
+  successCount    Int            @default(0)
+  failedCount     Int            @default(0)
+  status          BatchJobStatus @default(PENDING)
+  priority        Int            @default(0)
+  scheduledAt     DateTime?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  error           String?
+  result          Json?          // 작업 결과
+  createdBy       String
+  createdAt       DateTime       @default(now())
+  logs            BatchJobLog[]
+
+  @@index([type])
+  @@index([status])
+  @@index([scheduledAt])
+}
+
+// 배치 작업 로그
+model BatchJobLog {
+  id              String    @id @default(cuid())
+  jobId           String
+  job             BatchJob  @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  level           String    // INFO, WARN, ERROR
+  message         String
+  recordId        String?   // 처리된 레코드 ID
+  details         Json?
+  createdAt       DateTime  @default(now())
+
+  @@index([jobId])
+  @@index([level])
+}
+
+// 검색 인덱스 메타
+model SearchIndex {
+  id              String   @id @default(cuid())
+  indexName       String   @unique
+  entityType      String   // 인덱싱 대상 엔티티
+  lastUpdatedAt   DateTime
+  documentCount   Int
+  indexStatus     String   // READY, UPDATING, ERROR
+  settings        Json?    // 인덱스 설정
+  createdAt       DateTime @default(now())
+}
+
+// 검색 쿼리 로그
+model SearchQueryLog {
+  id              String   @id @default(cuid())
+  userId          String
+  query           String
+  filters         Json?
+  resultCount     Int
+  responseTimeMs  Int
+  clickedResults  String[] // 클릭한 결과 ID
+  createdAt       DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
+// ============================================
+// PHASE 16: ADVANCED SECURITY & PRIVACY
+// ============================================
+
+enum DataZoneType {
+  GENERAL           // 일반
+  CONFIDENTIAL      // 기밀
+  SENSITIVE         // 민감
+  RESTRICTED        // 제한
+}
+
+enum VerificationLevel {
+  BASIC             // 기본 인증
+  MFA               // 다중 인증
+  BIOMETRIC         // 생체 인증
+  SUPERVISOR        // 상급자 승인
+}
+
+// 데이터 존 정의
+model DataZone {
+  id              String       @id @default(cuid())
+  name            String       @unique
+  type            DataZoneType
+  description     String?
+  encryptionRequired Boolean   @default(false)
+  accessPolicies  Json         // 접근 정책
+  retentionDays   Int?         // 보관 기간
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+// 프라이버시 존 (AI 분석용 익명 영역)
+model PrivacyZone {
+  id              String   @id @default(cuid())
+  name            String
+  description     String?
+  anonymizationRules Json   // 익명화 규칙
+  allowedAnalytics String[] // 허용된 분석 유형
+  accessLog       PrivacyZoneAccessLog[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// 프라이버시 존 접근 로그
+model PrivacyZoneAccessLog {
+  id              String      @id @default(cuid())
+  zoneId          String
+  zone            PrivacyZone @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+  userId          String
+  purpose         String      // 접근 목적
+  queryDetails    Json?       // 쿼리 상세
+  resultCount     Int?
+  accessedAt      DateTime    @default(now())
+
+  @@index([zoneId])
+  @@index([userId])
+  @@index([accessedAt])
+}
+
+// Zero Trust 검증 기록
+model ZeroTrustVerification {
+  id              String            @id @default(cuid())
+  userId          String
+  sessionId       String
+  resourceType    String            // 접근 리소스 유형
+  resourceId      String?
+  requiredLevel   VerificationLevel
+  actualLevel     VerificationLevel
+  passed          Boolean
+  factors         Json              // 검증 요소
+  riskScore       Float?            // 리스크 점수
+  deviceFingerprint String?
+  ipAddress       String
+  geoLocation     String?
+  verifiedAt      DateTime          @default(now())
+
+  @@index([userId])
+  @@index([sessionId])
+  @@index([passed])
+  @@index([verifiedAt])
+}
+
+// 이상 행위 탐지
+model AnomalyDetection {
+  id              String   @id @default(cuid())
+  userId          String
+  anomalyType     String   // LOGIN_PATTERN, ACCESS_PATTERN, DATA_EXPORT, TIME_ANOMALY
+  severity        String   // LOW, MEDIUM, HIGH, CRITICAL
+  description     String
+  detectedPattern Json     // 감지된 패턴
+  baselinePattern Json     // 기준 패턴
+  deviation       Float    // 이탈 정도
+  isBlocked       Boolean  @default(false)
+  isReviewed      Boolean  @default(false)
+  reviewedBy      String?
+  reviewResult    String?
+  detectedAt      DateTime @default(now())
+
+  @@index([userId])
+  @@index([anomalyType])
+  @@index([severity])
+  @@index([isReviewed])
+}
+
+// 보안 정책
+model SecurityPolicy {
+  id              String   @id @default(cuid())
+  name            String   @unique
+  category        String   // ACCESS, DATA, NETWORK, DEVICE
+  rules           Json     // 정책 규칙
+  enforcement     String   // ENFORCE, AUDIT_ONLY
+  priority        Int      @default(0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// ============================================
+// PHASE 17: HR DATA LAKE & ANALYTICS
+// ============================================
+
+enum EventClassification {
+  EMPLOYMENT       // 고용 이벤트
+  COMPENSATION     // 보상 이벤트
+  PERFORMANCE      // 성과 이벤트
+  ATTENDANCE       // 근태 이벤트
+  TRAINING         // 교육 이벤트
+  ORGANIZATION     // 조직 이벤트
+}
+
+// HR 이벤트 스트림
+model HREvent {
+  id              String              @id @default(cuid())
+  eventType       String              // 세부 이벤트 유형
+  classification  EventClassification
+  entityType      String              // User, Employee, Department 등
+  entityId        String
+  eventPayload    Json                // 이벤트 데이터
+  metadata        Json?               // 메타데이터
+  sourceSystem    String              // 이벤트 출처
+  occurredAt      DateTime            // 실제 발생 시점
+  processedAt     DateTime            @default(now())
+
+  @@index([eventType])
+  @@index([classification])
+  @@index([entityType, entityId])
+  @@index([occurredAt])
+}
+
+// 데이터 레이크 원천 테이블
+model DataLakeRecord {
+  id              String   @id @default(cuid())
+  sourceTable     String   // 원천 테이블명
+  recordId        String   // 원천 레코드 ID
+  data            Json     // 스키마 변환된 데이터
+  partition       String   // 파티션 키 (YYYYMM)
+  version         Int      @default(1)
+  isLatest        Boolean  @default(true)
+  ingestedAt      DateTime @default(now())
+
+  @@index([sourceTable, recordId])
+  @@index([partition])
+  @@index([isLatest])
+}
+
+// 시계열 분석 결과
+model TimeSeriesAnalysis {
+  id              String   @id @default(cuid())
+  metricName      String   // turnover_rate, headcount, avg_salary 등
+  organizationId  String?
+  timePeriod      String   // DAILY, WEEKLY, MONTHLY, QUARTERLY
+  periodValue     String   // 2024-01, 2024-Q1 등
+  value           Float
+  previousValue   Float?
+  changePercent   Float?
+  trend           String?  // UP, DOWN, STABLE
+  seasonality     Json?    // 계절성 분석
+  forecast        Float?   // 예측값
+  confidence      Float?   // 예측 신뢰도
+  calculatedAt    DateTime @default(now())
+
+  @@unique([metricName, organizationId, timePeriod, periodValue])
+  @@index([metricName])
+  @@index([organizationId])
+  @@index([periodValue])
+}
+
+// 외부 데이터 연결
+model ExternalDataLink {
+  id              String   @id @default(cuid())
+  name            String
+  sourceType      String   // SALES, FINANCE, OKR, SURVEY
+  connectionConfig Json    // 연결 설정 (암호화)
+  syncFrequency   String   // REALTIME, HOURLY, DAILY
+  lastSyncAt      DateTime?
+  syncStatus      String   // SUCCESS, FAILED, PENDING
+  mappingRules    Json     // 데이터 매핑 규칙
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([sourceType])
+  @@index([isActive])
+}
+
+// 장기 트렌드 리포트
+model LongTermTrendReport {
+  id              String   @id @default(cuid())
+  reportName      String
+  description     String?
+  timeSpan        String   // 분석 기간 (예: "5Y", "3Y")
+  startDate       DateTime
+  endDate         DateTime
+  metrics         Json     // 분석 대상 지표
+  findings        Json     // 주요 발견사항
+  visualizations  Json?    // 시각화 데이터
+  recommendations String[] // 권고사항
+  generatedBy     String
+  generatedAt     DateTime @default(now())
+
+  @@index([reportName])
+  @@index([startDate])
+}
+
+// 코호트 분석
+model CohortAnalysis {
+  id              String   @id @default(cuid())
+  cohortType      String   // HIRE_MONTH, DEPARTMENT, POSITION
+  cohortValue     String   // 2024-01, Engineering 등
+  analysisType    String   // RETENTION, PROMOTION, PERFORMANCE
+  timeUnit        String   // MONTH, QUARTER, YEAR
+  data            Json     // 코호트 분석 데이터
+  metrics         Json     // 주요 지표
+  comparisons     Json?    // 비교 분석
+  analyzedAt      DateTime @default(now())
+
+  @@index([cohortType, cohortValue])
+  @@index([analysisType])
+}

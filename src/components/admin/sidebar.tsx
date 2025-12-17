@@ -18,6 +18,7 @@ import {
   Shield,
   Database,
   X,
+  Briefcase,
 } from "lucide-react";
 
 const menuGroups = [
@@ -54,6 +55,29 @@ const menuGroups = [
     items: [
       { title: "결재 관리", href: "/admin/approval", icon: FileCheck },
       { title: "통계/리포트", href: "/admin/reports", icon: BarChart3 },
+    ],
+  },
+  {
+    label: "채용 관리",
+    items: [
+      { title: "채용 공고", href: "/admin/recruitment/postings", icon: Briefcase },
+      { title: "파이프라인", href: "/admin/recruitment/pipeline", icon: TrendingUp },
+      { title: "인재풀", href: "/admin/recruitment/talent-pool", icon: Users },
+    ],
+  },
+  {
+    label: "전략 HR",
+    items: [
+      { title: "인력 계획", href: "/admin/hr-strategy/workforce", icon: Users },
+      { title: "정원 관리", href: "/admin/hr-strategy/headcount", icon: Building2 },
+      { title: "시뮬레이션", href: "/admin/hr-strategy/simulation", icon: TrendingUp },
+    ],
+  },
+  {
+    label: "규정 관리",
+    items: [
+      { title: "인사 규정", href: "/admin/policies", icon: FileCheck },
+      { title: "증명서", href: "/admin/certificates", icon: FileCheck },
     ],
   },
   {

@@ -260,6 +260,9 @@ model Organization {
   parent      Organization? @relation("OrgHierarchy", fields: [parentId], references: [id])
   children    Organization[] @relation("OrgHierarchy")
   employees   Employee[]
+  workforcePlans WorkforcePlan[]
+  headcountLimits HeadcountLimit[]
+  laborCostForecasts LaborCostForecast[]
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
 
@@ -871,5 +874,406 @@ model AttendanceAlert {
   @@index([date])
   @@index([alertType])
   @@index([isResolved])
+}
+
+// ============================================
+// PHASE 1: STRATEGIC HR & WORKFORCE OPERATIONS
+// ============================================
+
+enum PlanStatus {
+  DRAFT
+  SUBMITTED
+  APPROVED
+  REJECTED
+}
+
+enum ScenarioStatus {
+  DRAFT
+  ANALYZING
+  COMPLETED
+}
+
+enum SimulationStatus {
+  DRAFT
+  RUNNING
+  COMPLETED
+}
+
+// 인력 계획
+model WorkforcePlan {
+  id              String     @id @default(cuid())
+  year            Int
+  quarter         Int?       // null = 연간 계획
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  currentHeadcount Int
+  plannedHeadcount Int
+  budgetAmount    Decimal    @db.Decimal(15, 2)
+  status          PlanStatus @default(DRAFT)
+  notes           String?
+  createdBy       String
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@unique([year, quarter, organizationId])
+  @@index([organizationId])
+  @@index([year])
+}
+
+// 정원 관리
+model HeadcountLimit {
+  id              String   @id @default(cuid())
+  organizationId  String
+  organization    Organization @relation(fields: [organizationId], references: [id])
+  limitCount      Int
+  effectiveDate   DateTime
+  expiryDate      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([organizationId])
+  @@index([effectiveDate])
+}
+
+// 시나리오 분석
+model HeadcountScenario {
+  id            String         @id @default(cuid())
+  name          String
+  description   String?
+  baselineData  Json           // 현재 상태 스냅샷
+  changes       Json           // 증원/감원 변경 내역
+  costImpact    Decimal        @db.Decimal(15, 2)
+  status        ScenarioStatus @default(DRAFT)
+  createdBy     String
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([status])
+}
+
+// 인건비 예측
+model LaborCostForecast {
+  id              String   @id @default(cuid())
+  yearMonth       String   // YYYYMM
+  organizationId  String?
+  organization    Organization? @relation(fields: [organizationId], references: [id])
+  baseSalary      Decimal  @db.Decimal(15, 2)
+  bonus           Decimal  @db.Decimal(15, 2)
+  benefits        Decimal  @db.Decimal(15, 2)
+  totalCost       Decimal  @db.Decimal(15, 2)
+  isActual        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([yearMonth, organizationId])
+  @@index([yearMonth])
+  @@index([organizationId])
+}
+
+// 조직 개편 시뮬레이션
+model OrgRestructureSimulation {
+  id                String           @id @default(cuid())
+  name              String
+  description       String?
+  currentStructure  Json
+  proposedStructure Json
+  impactAnalysis    Json?            // 영향 분석 결과
+  status            SimulationStatus @default(DRAFT)
+  createdBy         String
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@index([status])
+}
+
+// ============================================
+// PHASE 2: RECRUITMENT MANAGEMENT
+// ============================================
+
+enum PostingStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+  CANCELLED
+}
+
+enum ApplicationStatus {
+  SUBMITTED
+  IN_REVIEW
+  PASSED
+  REJECTED
+  WITHDRAWN
+}
+
+enum RecruitmentStage {
+  DOCUMENT          // 서류
+  FIRST_INTERVIEW   // 1차 면접
+  SECOND_INTERVIEW  // 2차 면접
+  FINAL_INTERVIEW   // 최종 면접
+  OFFER             // 합격
+  ONBOARDING        // 입사
+}
+
+enum StageResult {
+  PASSED
+  FAILED
+  PENDING
+}
+
+enum EvaluationRecommendation {
+  STRONG_HIRE
+  HIRE
+  NO_HIRE
+  STRONG_NO_HIRE
+}
+
+// 채용 공고
+model JobPosting {
+  id              String         @id @default(cuid())
+  title           String
+  organizationId  String
+  positionId      String
+  description     String         @db.Text
+  requirements    String         @db.Text
+  benefits        String?        @db.Text
+  salaryRange     String?
+  employmentType  EmploymentType
+  location        String?
+  status          PostingStatus  @default(DRAFT)
+  publishedAt     DateTime?
+  closingDate     DateTime?
+  applications    Application[]
+  createdBy       String
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([status])
+  @@index([organizationId])
+  @@index([closingDate])
+}
+
+// 지원자
+model Applicant {
+  id              String        @id @default(cuid())
+  email           String        @unique
+  name            String
+  phone           String?
+  resumeUrl       String?
+  portfolioUrl    String?
+  source          String?       // 지원 경로
+  isInTalentPool  Boolean       @default(false)
+  applications    Application[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([email])
+  @@index([isInTalentPool])
+}
+
+// 지원서
+model Application {
+  id              String              @id @default(cuid())
+  postingId       String
+  posting         JobPosting          @relation(fields: [postingId], references: [id], onDelete: Cascade)
+  applicantId     String
+  applicant       Applicant           @relation(fields: [applicantId], references: [id], onDelete: Cascade)
+  status          ApplicationStatus   @default(SUBMITTED)
+  currentStage    RecruitmentStage    @default(DOCUMENT)
+  coverLetter     String?             @db.Text
+  appliedAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  stages          ApplicationStageHistory[]
+  evaluations     InterviewEvaluation[]
+
+  @@unique([postingId, applicantId])
+  @@index([postingId])
+  @@index([applicantId])
+  @@index([status])
+  @@index([currentStage])
+}
+
+// 채용 단계 이력
+model ApplicationStageHistory {
+  id              String           @id @default(cuid())
+  applicationId   String
+  application     Application      @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  stage           RecruitmentStage
+  result          StageResult?
+  notes           String?
+  processedBy     String?
+  processedAt     DateTime         @default(now())
+
+  @@index([applicationId])
+  @@index([stage])
+}
+
+// 면접 평가 템플릿
+model InterviewTemplate {
+  id              String                @id @default(cuid())
+  name            String
+  description     String?
+  items           Json                  // 평가 항목 및 가중치
+  isActive        Boolean               @default(true)
+  evaluations     InterviewEvaluation[]
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+}
+
+// 면접 평가
+model InterviewEvaluation {
+  id              String                   @id @default(cuid())
+  applicationId   String
+  application     Application              @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  interviewerId   String
+  templateId      String
+  template        InterviewTemplate        @relation(fields: [templateId], references: [id])
+  stage           RecruitmentStage
+  scores          Json                     // 항목별 점수
+  overallScore    Decimal                  @db.Decimal(5, 2)
+  recommendation  EvaluationRecommendation
+  comments        String?                  @db.Text
+  evaluatedAt     DateTime                 @default(now())
+
+  @@index([applicationId])
+  @@index([interviewerId])
+  @@index([templateId])
+}
+
+// ============================================
+// PHASE 3: HR POLICY & REGULATIONS MANAGEMENT
+// ============================================
+
+enum PolicyStatus {
+  DRAFT
+  UNDER_REVIEW
+  ACTIVE
+  DEPRECATED
+}
+
+// 정책 카테고리
+model PolicyCategory {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  parentId    String?
+  parent      PolicyCategory? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    PolicyCategory[] @relation("CategoryHierarchy")
+  policies    Policy[]
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// 인사 정책/규정
+model Policy {
+  id              String          @id @default(cuid())
+  code            String          @unique
+  title           String
+  categoryId      String?
+  category        PolicyCategory? @relation(fields: [categoryId], references: [id])
+  currentVersion  Int             @default(1)
+  status          PolicyStatus    @default(DRAFT)
+  effectiveDate   DateTime?
+  expiryDate      DateTime?
+  keywords        String[]        // 검색용 키워드
+  requiresAcknowledgment Boolean  @default(false)
+  versions        PolicyVersion[]
+  acknowledgments PolicyAcknowledgment[]
+  createdBy       String
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  @@index([status])
+  @@index([categoryId])
+  @@index([effectiveDate])
+}
+
+// 정책 버전 (개정 이력)
+model PolicyVersion {
+  id              String   @id @default(cuid())
+  policyId        String
+  policy          Policy   @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  versionNumber   Int
+  content         String   @db.Text
+  summary         String?  // 개정 요약
+  changeNotes     String?  @db.Text // 변경 사항
+  effectiveDate   DateTime
+  createdBy       String
+  createdAt       DateTime @default(now())
+
+  @@unique([policyId, versionNumber])
+  @@index([policyId])
+}
+
+// 정책 확인/동의 이력
+model PolicyAcknowledgment {
+  id              String   @id @default(cuid())
+  policyId        String
+  policy          Policy   @relation(fields: [policyId], references: [id], onDelete: Cascade)
+  userId          String
+  versionNumber   Int
+  acknowledgedAt  DateTime @default(now())
+  ipAddress       String?
+
+  @@unique([policyId, userId, versionNumber])
+  @@index([policyId])
+  @@index([userId])
+}
+
+// ============================================
+// PHASE 4: CERTIFICATE & DOCUMENT AUTOMATION
+// ============================================
+
+enum CertificateType {
+  EMPLOYMENT         // 재직증명서
+  CAREER             // 경력증명서
+  SALARY             // 급여증명서
+  POSITION           // 직위증명서
+  CUSTOM             // 기타
+}
+
+enum CertificateStatus {
+  REQUESTED
+  APPROVED
+  ISSUED
+  REJECTED
+  EXPIRED
+}
+
+// 증명서 템플릿
+model CertificateTemplate {
+  id             String            @id @default(cuid())
+  name           String
+  type           CertificateType
+  content        String            @db.Text  // HTML 또는 마크다운 템플릿
+  variables      Json              // 사용 가능한 변수 목록
+  isActive       Boolean           @default(true)
+  issuances      CertificateIssuance[]
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+}
+
+// 증명서 발급 이력
+model CertificateIssuance {
+  id              String            @id @default(cuid())
+  templateId      String
+  template        CertificateTemplate @relation(fields: [templateId], references: [id])
+  employeeId      String
+  requestedBy     String
+  purpose         String?           // 발급 목적
+  status          CertificateStatus @default(REQUESTED)
+  approvedBy      String?
+  approvedAt      DateTime?
+  issuedAt        DateTime?
+  expiryDate      DateTime?         // 증명서 유효기간
+  verificationCode String           @unique  // 외부 검증용 코드
+  documentUrl     String?           // 생성된 PDF URL
+  signatureData   Json?             // 전자서명 데이터
+  createdAt       DateTime          @default(now())
+
+  @@index([employeeId])
+  @@index([templateId])
+  @@index([status])
+  @@index([verificationCode])
 }
 

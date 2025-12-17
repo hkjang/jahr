@@ -13,4 +13,7 @@ export {
 export { useTabNavigation } from "./useTabNavigation";
 export { useTabKeyboard } from "./useTabKeyboard";
 
-
+// Tab data protection hooks
+export { useUnsavedChangesWarning } from "./useUnsavedChangesWarning";
+export { useTabAutoSave } from "./useTabAutoSave";
+export { useTabRecovery } from "./useTabRecovery";

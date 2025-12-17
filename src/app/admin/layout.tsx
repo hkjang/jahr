@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AdminSidebar } from "@/components/admin/sidebar";
 import { AdminHeader } from "@/components/admin/header";
-import { TabBar } from "@/components/tab";
+import { TabBar, TabRecoveryDialog } from "@/components/tab";
 import { useTabStore } from "@/lib/stores/tab-store";
 import { useTabKeyboard } from "@/hooks";
 import { ROLES } from "@/lib/constants";
@@ -88,6 +88,7 @@ export default function AdminLayout({
         <TabBar />
         <main className="p-6">{children}</main>
       </div>
+      <TabRecoveryDialog />
     </div>
   );
 }

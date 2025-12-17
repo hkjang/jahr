@@ -69,7 +69,7 @@ export interface TabStoreState {
 export interface TabStoreActions {
   // 탭 조작
   openTab: (options: CreateTabOptions) => void;
-  closeTab: (tabId: string) => void;
+  closeTab: (tabId: string, force?: boolean) => void;
   closeOtherTabs: (tabId: string) => void;
   closeRightTabs: (tabId: string) => void;
   closeAllTabs: () => void;

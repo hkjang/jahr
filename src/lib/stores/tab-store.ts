@@ -121,7 +121,7 @@ export const useTabStore = create<TabStore>()(
       },
 
       // 탭 닫기
-      closeTab: (tabId: string) => {
+      closeTab: (tabId: string, force?: boolean) => {
         const state = get();
         const tabToClose = state.tabs.find((tab) => tab.id === tabId);
 
@@ -129,6 +129,14 @@ export const useTabStore = create<TabStore>()(
 
         // 고정 탭은 닫기 불가 (대시보드)
         if (tabToClose.isPinned) return;
+
+        // 미저장 변경사항 확인 (force가 아닌 경우)
+        if (!force && tabToClose.isModified) {
+          const confirmed = window.confirm(
+            `"${tabToClose.title}" 탭에 저장되지 않은 변경사항이 있습니다.\n닫으시겠습니까?`
+          );
+          if (!confirmed) return;
+        }
 
         // 히스토리에 추가
         const historyItem: TabHistoryItem = {

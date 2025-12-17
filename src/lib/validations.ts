@@ -114,8 +114,8 @@ export const salarySchema = z.object({
   yearMonth: z.string().regex(/^\d{6}$/, "YYYYMM 형식으로 입력해주세요."),
   baseSalary: z.number().positive("기본급을 입력해주세요."),
   bonus: z.number().min(0).default(0),
-  allowances: z.record(z.number()).optional(),
-  deductions: z.record(z.number()).optional(),
+  allowances: z.record(z.string(), z.number()).optional(),
+  deductions: z.record(z.string(), z.number()).optional(),
 });
 
 // 평가
@@ -143,7 +143,7 @@ export const trainingSchema = z.object({
 export const approvalSchema = z.object({
   type: z.enum(["LEAVE_REQUEST", "APPOINTMENT", "EXPENSE", "OVERTIME", "BUSINESS_TRIP", "OTHER"]),
   title: z.string().min(1, "제목을 입력해주세요."),
-  content: z.record(z.unknown()),
+  content: z.record(z.string(), z.unknown()),
   approverIds: z.array(z.string()).min(1, "결재자를 선택해주세요."),
 });
 

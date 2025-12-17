@@ -60,6 +60,17 @@ export const FAMILY_RELATION_LABELS: Record<string, string> = {
   OTHER: "기타",
 };
 
+// 가족 관계 (alias)
+export const RELATION_LABELS = FAMILY_RELATION_LABELS;
+
+// 사용자 상태
+export const USER_STATUS_LABELS: Record<string, string> = {
+  ACTIVE: "재직",
+  INACTIVE: "퇴사",
+  SUSPENDED: "정지",
+  PENDING: "대기",
+};
+
 // 문서 유형
 export const DOCUMENT_TYPE_LABELS: Record<string, string> = {
   CONTRACT: "계약서",

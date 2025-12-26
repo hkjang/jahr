@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui";
 import {
   Users,
@@ -57,6 +60,11 @@ const features = [
 ];
 
 export default function HomePage() {
+  const { data: session, status } = useSession();
+  const roles = session?.user?.roles || [];
+  const isAdmin = roles.includes("SYSTEM_ADMIN") || roles.includes("HR_ADMIN");
+  const isLoggedIn = status === "authenticated";
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
       {/* 네비게이션 */}
@@ -69,16 +77,37 @@ export default function HomePage() {
             <span className="text-2xl font-bold text-white">JaHR</span>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/login">
-              <Button variant="ghost" className="text-white hover:bg-white/10">
-                로그인
-              </Button>
-            </Link>
-            <Link href="/login">
-              <Button className="bg-white text-blue-900 hover:bg-gray-100">
-                시작하기
-              </Button>
-            </Link>
+            {isLoggedIn ? (
+              <>
+                {isAdmin && (
+                  <Link href="/admin">
+                    <Button variant="ghost" className="text-white hover:bg-white/10">
+                      <Shield className="w-4 h-4 mr-2" />
+                      어드민 콘솔
+                    </Button>
+                  </Link>
+                )}
+                <Link href="/portal/dashboard">
+                  <Button className="bg-white text-blue-900 hover:bg-gray-100">
+                    포털 바로가기
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/login">
+                  <Button variant="ghost" className="text-white hover:bg-white/10">
+                    로그인
+                  </Button>
+                </Link>
+                <Link href="/login">
+                  <Button className="bg-white text-blue-900 hover:bg-gray-100">
+                    시작하기
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </nav>
@@ -90,7 +119,7 @@ export default function HomePage() {
             <Shield className="w-4 h-4 text-green-400" />
             <span className="text-sm text-white/80">보안 및 컴플라이언스 준수</span>
           </div>
-          
+
           <h1 className="text-5xl md:text-6xl font-bold text-white mb-6 leading-tight">
             스마트한{" "}
             <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
@@ -99,7 +128,7 @@ export default function HomePage() {
             <br />
             시스템
           </h1>
-          
+
           <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
             인사 데이터 통합 관리, 업무 자동화, 의사결정 지원을 위한
             차세대 HR 솔루션을 경험하세요.

@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
-import { Bell, Menu, LogOut, User, Settings, ChevronDown } from "lucide-react";
+import { Bell, Menu, LogOut, User, Settings, ChevronDown, Shield } from "lucide-react";
 import {
   Avatar,
   AvatarFallback,
@@ -33,6 +33,9 @@ export function PortalHeader({ onMenuClick }: PortalHeaderProps) {
     .map((n) => n[0])
     .join("")
     .toUpperCase() || "U";
+
+  const roles = session?.user?.roles || [];
+  const isAdmin = roles.includes("SYSTEM_ADMIN") || roles.includes("HR_ADMIN");
 
   return (
     <header className="sticky top-0 z-30 bg-[var(--background)] dark:bg-[var(--background)] border-b border-[var(--border)]">
@@ -107,6 +110,17 @@ export function PortalHeader({ onMenuClick }: PortalHeaderProps) {
                   설정
                 </Link>
               </DropdownMenuItem>
+              {isAdmin && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/admin" className="cursor-pointer text-blue-600">
+                      <Shield className="w-4 h-4 mr-2" />
+                      어드민 콘솔
+                    </Link>
+                  </DropdownMenuItem>
+                </>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={() => signOut({ callbackUrl: "/login" })}

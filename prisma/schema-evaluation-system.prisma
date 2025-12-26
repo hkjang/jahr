@@ -1,0 +1,318 @@
+// ============================================
+// PERFORMANCE EVALUATION EXTENSION
+// ============================================
+
+// ============================================
+// 평가 기준 관리
+// ============================================
+
+model EvaluationCycle {
+  id          String           @id @default(cuid())
+  periodId    String
+  period      EvaluationPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  cycleName   String           // 1차, 2차 평가
+  cycleOrder  Int              // 순서
+  startDate   DateTime
+  endDate     DateTime
+  isActive    Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([periodId])
+  @@index([isActive])
+}
+
+model EvaluationGroup {
+  id              String           @id @default(cuid())
+  periodId        String
+  period          EvaluationPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
+  name            String
+  targetPositions String[]         // 대상 직급 코드
+  weightRatio     Json             // {"performance": 60, "competency": 30, "360": 10}
+  gradeDistribution Json?          // {"S": 10, "A": 20, "B": 40, "C": 20, "D": 10}
+  isActive        Boolean          @default(true)
+  indicators      CompetencyIndicator[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  @@index([periodId])
+  @@index([isActive])
+}
+
+model KPIIndicator {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  year           Int
+  quarter        Int?         // 1, 2, 3, 4 or null for annual
+  indicator      String       // KPI 지표명
+  description    String?
+  target         Decimal      @db.Decimal(15, 2) // 목표치
+  actual         Decimal?     @db.Decimal(15, 2) // 실적
+  unit           String?      // 단위 (원, %, 건 등)
+  weight         Int          // 가중치 (%)
+  targetType     String       @default("HIGHER") // HIGHER, LOWER, EXACT
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId])
+  @@index([year])
+}
+
+// ============================================
+// 목표수립 (MBO/Goal Setting)
+// ============================================
+
+enum GoalStatus {
+  DRAFT       // 작성중
+  SUBMITTED   // 제출
+  LEVEL1_APPROVED // 1차 승인
+  LEVEL2_APPROVED // 2차 승인
+  FINAL_APPROVED  // 최종 승인
+  REJECTED    // 반려
+}
+
+model GoalSetting {
+  id                  String           @id @default(cuid())
+  employeeId          String
+  employee            Employee         @relation(fields: [employeeId], references: [id])
+  periodId            String
+  period              EvaluationPeriod @relation(fields: [periodId], references: [id])
+  goalTitle           String
+  goalDescription     String           @db.Text
+  measurableTarget    String           // 측정 가능한 목표
+  targetValue         String?          // 목표 수치
+  weight              Int              // 가중치 (%)
+  status              GoalStatus       @default(DRAFT)
+  approvals           GoalApproval[]
+  interimReviews      InterimReview[]
+  ratings             PerformanceRating[]
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  @@index([employeeId])
+  @@index([periodId])
+  @@index([status])
+}
+
+model GoalApproval {
+  id          String      @id @default(cuid())
+  goalId      String
+  goal        GoalSetting @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  level       Int         // 1차, 2차
+  approverId  String      // 승인자 ID
+  status      String      @default("PENDING") // PENDING, APPROVED, REJECTED
+  comments    String?     @db.Text
+  approvedAt  DateTime?
+  createdAt   DateTime    @default(now())
+
+  @@index([goalId])
+  @@index([approverId])
+}
+
+model InterimReview {
+  id               String      @id @default(cuid())
+  goalId           String
+  goal             GoalSetting @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  reviewDate       DateTime
+  progress         Int         // 진행률 (%)
+  achievements     String      @db.Text // 달성 내역
+  challenges       String?     @db.Text // 어려움/이슈
+  planActions      String?     @db.Text // 향후 계획
+  reviewerComments String?     @db.Text // 평가자 의견
+  reviewerId       String?
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  @@index([goalId])
+  @@index([reviewDate])
+}
+
+// ============================================
+// 평가 실행
+// ============================================
+
+model PerformanceRating {
+  id                String      @id @default(cuid())
+  evaluationId      String
+  evaluation        Evaluation  @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  goalId            String?
+  goal              GoalSetting? @relation(fields: [goalId], references: [id])
+  selfScore         Decimal?    @db.Decimal(5, 2)
+  managerScore      Decimal?    @db.Decimal(5, 2)
+  adjustedScore     Decimal?    @db.Decimal(5, 2) // 표준편차 조정 후
+  selfComments      String?     @db.Text
+  managerComments   String?     @db.Text
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+
+  @@index([evaluationId])
+  @@index([goalId])
+}
+
+model CompetencyEvaluation {
+  id              String              @id @default(cuid())
+  evaluationId    String
+  evaluation      Evaluation          @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  competencyId    String
+  competency      CompetencyIndicator @relation(fields: [competencyId], references: [id])
+  selfScore       Decimal?            @db.Decimal(5, 2)
+  evaluatorScore  Decimal?            @db.Decimal(5, 2)
+  adjustedScore   Decimal?            @db.Decimal(5, 2)
+  comments        String?             @db.Text
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@index([evaluationId])
+  @@index([competencyId])
+}
+
+model CompetencyIndicator {
+  id          String                 @id @default(cuid())
+  groupId     String
+  group       EvaluationGroup        @relation(fields: [groupId], references: [id])
+  category    String                 // 기술역량, 업무역량, 리더십 등
+  name        String                 // 지표명
+  description String?                @db.Text
+  weight      Int                    // 가중치 (%)
+  evaluations CompetencyEvaluation[]
+  isActive    Boolean                @default(true)
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+
+  @@index([groupId])
+  @@index([category])
+}
+
+enum RaterRelationship {
+  SUPERVISOR  // 상사
+  PEER        // 동료
+  SUBORDINATE // 부하
+  SELF        // 본인
+  HR          // HR
+}
+
+model MultiRaterFeedback {
+  id            String            @id @default(cuid())
+  evaluationId  String
+  evaluation    Evaluation        @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  raterId       String            // 평가자 ID
+  relationship  RaterRelationship // 평가자 관계
+  feedback      Json              // 항목별 점수 및 코멘트
+  isAnonymous   Boolean           @default(true)
+  submittedAt   DateTime?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  @@index([evaluationId])
+  @@index([raterId])
+}
+
+// ============================================
+// 종합평가
+// ============================================
+
+enum FinalGrade {
+  S // 탁월
+  A // 우수
+  B // 보통
+  C // 개선필요
+  D // 부진
+}
+
+model FinalEvaluation {
+  id                  String            @id @default(cuid())
+  evaluationId        String            @unique
+  evaluation          Evaluation        @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
+  performanceScore    Decimal           @db.Decimal(5, 2) // 업적평가 점수
+  competencyScore     Decimal           @db.Decimal(5, 2) // 능력평가 점수
+  multiRaterScore     Decimal?          @db.Decimal(5, 2) // 다면평가 점수
+  totalScore          Decimal           @db.Decimal(5, 2) // 총점
+  calculatedGrade     FinalGrade        // 계산된 등급
+  finalGrade          FinalGrade        // 최종 등급 (인사위원회 조정 가능)
+  hrCommitteeComments String?           @db.Text // 인사위원회 의견
+  departmentComments  String?           @db.Text // 부서장 의견
+  isAppealed          Boolean           @default(false)
+  appeals             EvaluationAppeal[]
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  @@index([finalGrade])
+}
+
+enum AppealStatus {
+  PENDING  // 검토중
+  ACCEPTED // 수용
+  REJECTED // 기각
+}
+
+model EvaluationAppeal {
+  id               String          @id @default(cuid())
+  finalEvalId      String
+  finalEval        FinalEvaluation @relation(fields: [finalEvalId], references: [id], onDelete: Cascade)
+  reason           String          @db.Text // 이의제기 사유
+  evidences        Json?           // 증빙 자료
+  requestedAt      DateTime        @default(now())
+  status           AppealStatus    @default(PENDING)
+  reviewerId       String?         // 검토자
+  reviewerComments String?         @db.Text
+  decision         String?         // 결정 내용
+  resolvedAt       DateTime?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  @@index([finalEvalId])
+  @@index([status])
+}
+
+// ============================================
+// 시스템 관리
+// ============================================
+
+model SystemCode {
+  id          String   @id @default(cuid())
+  groupCode   String   // 그룹 코드 (예: POSITION, DEPT_TYPE)
+  groupName   String   // 그룹명
+  code        String   // 개별 코드
+  name        String   // 코드명
+  description String?
+  sortOrder   Int      @default(0)
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([groupCode, code])
+  @@index([groupCode])
+  @@index([isActive])
+}
+
+model PermissionGroup {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  description String?
+  permissions Json     // 권한 목록 배열
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([code])
+  @@index([isActive])
+}
+
+model MenuPermission {
+  id                  String   @id @default(cuid())
+  menuPath            String   @unique // /admin/employees
+  menuName            String
+  parentPath          String?  // 부모 메뉴 경로
+  icon                String?  // 아이콘
+  requiredPermissions String[] // 필요 권한 코드 배열
+  sortOrder           Int      @default(0)
+  isVisible           Boolean  @default(true)
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([parentPath])
+  @@index([isActive])
+}

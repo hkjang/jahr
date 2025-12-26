@@ -77,7 +77,23 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { employeeId, date, checkIn, checkOut, workType, note } = body;
+    let { employeeId } = body;
+    const { date, checkIn, checkOut, workType, note } = body;
+
+    // employeeId가 없으면 세션에서 조회
+    if (!employeeId) {
+      const employee = await prisma.employee.findFirst({
+        where: { user: { id: session.user.id } },
+        select: { id: true },
+      });
+      if (!employee) {
+        return NextResponse.json(
+          { error: "Employee not found for current user" },
+          { status: 404 }
+        );
+      }
+      employeeId = employee.id;
+    }
 
     // 해당 날짜의 기존 기록이 있는지 확인
     const existing = await prisma.attendance.findFirst({

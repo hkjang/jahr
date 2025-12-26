@@ -263,7 +263,6 @@ model Organization {
   workforcePlans     WorkforcePlan[]
   headcountLimits    HeadcountLimit[]
   laborCostForecasts LaborCostForecast[]
-  kpiIndicators      KPIIndicator[]
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
 
@@ -357,7 +356,6 @@ model Employee {
   retirementPensions    RetirementPension[]
   yearEndTaxSettlements YearEndTaxSettlement[]
   dependentFamilies     DependentFamily[]
-  goalSettings          GoalSetting[]
 
   @@index([organizationId])
   @@index([positionId])
@@ -567,9 +565,6 @@ model EvaluationPeriod {
   status      PeriodStatus         @default(DRAFT)
   evaluations Evaluation[]
   templates   EvaluationTemplate[]
-  cycles      EvaluationCycle[]
-  groups      EvaluationGroup[]
-  goalSettings GoalSetting[]
   createdAt   DateTime             @default(now())
   updatedAt   DateTime             @updatedAt
 
@@ -612,10 +607,6 @@ model Evaluation {
   selfComment    String?
   managerComment String?
   items          EvaluationItem[]
-  performanceRatings    PerformanceRating[]
-  competencyEvaluations CompetencyEvaluation[]
-  multiRaterFeedbacks   MultiRaterFeedback[]
-  finalEvaluation       FinalEvaluation?
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
 
@@ -3954,6 +3945,415 @@ model ExternalTrainingCertificate {
 }
 
 // ============================================
+// BENEFITS AND PAYROLL MANAGEMENT EXTENSION
+// ============================================
+
+// ============================================
+// 복리후생 관리
+// ============================================
+
+enum WelfareCategoryType {
+  SCHOLARSHIP // 학자금
+  HEALTH_CHECKUP // 건강검진
+  CONDO // 콘도
+  WELFARE_POINT // 복지포인트
+  GIFT // 선물
+  CONGRATULATORY // 경조금
+  MEDICAL // 의료비
+}
+
+model WelfareCategory {
+  id           String               @id @default(cuid())
+  code         String               @unique
+  name         String
+  type         WelfareCategoryType
+  description  String?
+  maxAmount    Decimal?             @db.Decimal(12, 2) // 최대 지원 금액
+  isActive     Boolean              @default(true)
+  applications WelfareApplication[]
+  createdAt    DateTime             @default(now())
+  updatedAt    DateTime             @updatedAt
+
+  @@index([type])
+  @@index([isActive])
+}
+
+model WelfareApplication {
+  id                 String          @id @default(cuid())
+  employeeId         String
+  employee           Employee        @relation(fields: [employeeId], references: [id])
+  categoryId         String
+  category           WelfareCategory @relation(fields: [categoryId], references: [id])
+  amount             Decimal         @db.Decimal(12, 2)
+  requestDate        DateTime        @default(now())
+  status             ApprovalStatus  @default(PENDING)
+  approvalId         String?
+  externalApprovalId String? // 그룹웨어 결재 ID
+  details            Json? // 상세 정보 (수혜자, 용도 등)
+  attachments        Json? // 증빙 서류
+  approvedBy         String?
+  approvedAt         DateTime?
+  rejectedReason     String?
+  processedDate      DateTime? // 지급일
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  @@index([employeeId])
+  @@index([categoryId])
+  @@index([status])
+  @@index([requestDate])
+}
+
+// ============================================
+// 4대보험 관리
+// ============================================
+
+enum NationalInsuranceType {
+  PENSION // 국민연금
+  HEALTH // 건강보험
+  EMPLOYMENT // 고용보험
+  INDUSTRIAL // 산재보험
+}
+
+enum InsuranceStatus {
+  ACTIVE // 가입
+  EXEMPTED // 면제
+  SUSPENDED // 유예
+  CANCELLED // 해지
+}
+
+model NationalInsurance {
+  id            String                @id @default(cuid())
+  type          NationalInsuranceType @unique
+  name          String
+  employeeRate  Decimal               @db.Decimal(5, 4) // 직원 부담률 (%)
+  employerRate  Decimal               @db.Decimal(5, 4) // 회사 부담률 (%)
+  maxIncome     Decimal?              @db.Decimal(12, 2) // 최대 보수월액
+  minIncome     Decimal?              @db.Decimal(12, 2) // 최소 보수월액
+  effectiveDate DateTime
+  isActive      Boolean               @default(true)
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+
+  @@index([effectiveDate])
+}
+
+model EmployeeInsurance {
+  id              String                @id @default(cuid())
+  employeeId      String
+  employee        Employee              @relation(fields: [employeeId], references: [id])
+  insuranceType   NationalInsuranceType
+  status          InsuranceStatus       @default(ACTIVE)
+  standardIncome  Decimal               @db.Decimal(12, 2) // 보수월액
+  startDate       DateTime
+  endDate         DateTime?
+  exemptionReason String? // 면제/유예 사유
+  payments        InsurancePayment[]
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+
+  @@unique([employeeId, insuranceType])
+  @@index([employeeId])
+  @@index([insuranceType])
+  @@index([status])
+}
+
+model InsurancePayment {
+  id                  String            @id @default(cuid())
+  employeeInsuranceId String
+  employeeInsurance   EmployeeInsurance @relation(fields: [employeeInsuranceId], references: [id], onDelete: Cascade)
+  yearMonth           String // YYYYMM
+  standardIncome      Decimal           @db.Decimal(12, 2) // 보수월액
+  employeeAmount      Decimal           @db.Decimal(12, 2) // 직원 부담금
+  employerAmount      Decimal           @db.Decimal(12, 2) // 회사 부담금
+  totalAmount         Decimal           @db.Decimal(12, 2) // 총 납부액
+  isPaid              Boolean           @default(false)
+  paidAt              DateTime?
+  createdBy           String?
+  createdAt           DateTime          @default(now())
+
+  @@unique([employeeInsuranceId, yearMonth])
+  @@index([yearMonth])
+  @@index([isPaid])
+}
+
+model InsuranceSettlement {
+  id                   String                @id @default(cuid())
+  year                 Int
+  insuranceType        NationalInsuranceType
+  totalStandardIncome  Decimal               @db.Decimal(14, 2) // 보수총액
+  totalEmployeePayment Decimal               @db.Decimal(14, 2)
+  totalEmployerPayment Decimal               @db.Decimal(14, 2)
+  adjustmentAmount     Decimal               @db.Decimal(12, 2) // 정산 금액
+  settlementDate       DateTime
+  notes                String?
+  createdBy            String?
+  createdAt            DateTime              @default(now())
+
+  @@unique([year, insuranceType])
+  @@index([year])
+  @@index([insuranceType])
+}
+
+// ============================================
+// 사보험 관리
+// ============================================
+
+enum PrivateInsuranceType {
+  PRIVACY_PROTECTION // 개인정보보호보험
+  DIRECTORS_LIABILITY // 임원배상책임보험
+  GROUP_ACCIDENT // 단체상해보험
+  FIDELITY_GUARANTEE // 신원보증보험
+}
+
+model PrivateInsurance {
+  id               String               @id @default(cuid())
+  type             PrivateInsuranceType
+  name             String
+  insuranceCompany String // 보험사
+  policyNumber     String               @unique // 증권번호
+  coverage         Decimal              @db.Decimal(14, 2) // 보장금액
+  annualPremium    Decimal              @db.Decimal(12, 2) // 연간 보험료
+  startDate        DateTime
+  endDate          DateTime
+  autoRenewal      Boolean              @default(false)
+  contactPerson    String?
+  contactPhone     String?
+  notes            String?
+  isActive         Boolean              @default(true)
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  @@index([type])
+  @@index([endDate])
+  @@index([isActive])
+}
+
+// ============================================
+// 급여 항목 관리
+// ============================================
+
+enum AllowanceType {
+  FIXED // 고정 수당
+  VARIABLE // 변동 수당
+  RATIO // 비율 수당
+  CONDITIONAL // 조건부 수당
+}
+
+model PayBand {
+  id            String    @id @default(cuid())
+  positionId    String
+  position      Position  @relation(fields: [positionId], references: [id])
+  grade         String? // 직급 세부 등급 (예: Senior 1, 2, 3)
+  minSalary     Decimal   @db.Decimal(12, 2)
+  midSalary     Decimal   @db.Decimal(12, 2)
+  maxSalary     Decimal   @db.Decimal(12, 2)
+  effectiveDate DateTime
+  endDate       DateTime?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([positionId])
+  @@index([effectiveDate])
+  @@index([isActive])
+}
+
+model AllowanceRule {
+  id                   String        @id @default(cuid())
+  code                 String        @unique
+  name                 String
+  type                 AllowanceType
+  baseAmount           Decimal?      @db.Decimal(12, 2) // 고정액
+  calculationFormula   Json? // 계산 공식 (JSON)
+  isTaxable            Boolean       @default(true)
+  isRetirementIncluded Boolean       @default(true) // 퇴직금 산입 여부
+  applicablePositions  String[] // 적용 직급 코드
+  description          String?
+  isActive             Boolean       @default(true)
+  createdAt            DateTime      @default(now())
+  updatedAt            DateTime      @updatedAt
+
+  @@index([code])
+  @@index([isActive])
+}
+
+enum DeductionType {
+  TAX // 세금 (소득세, 주민세)
+  INSURANCE // 4대보험
+  LOAN // 대출 (학자금 등)
+  GARNISHMENT // 압류
+  UNION // 노조비
+  OTHER // 기타
+}
+
+model DeductionRule {
+  id                 String        @id @default(cuid())
+  code               String        @unique
+  name               String
+  type               DeductionType
+  calculationFormula Json // 계산 공식
+  isAutomatic        Boolean       @default(true) // 자동 계산 여부
+  description        String?
+  isActive           Boolean       @default(true)
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  @@index([code])
+  @@index([type])
+  @@index([isActive])
+}
+
+// ============================================
+// 퇴직금 관리
+// ============================================
+
+model SeverancePay {
+  id                      String                   @id @default(cuid())
+  employeeId              String                   @unique
+  employee                Employee                 @relation(fields: [employeeId], references: [id])
+  accumulatedAmount       Decimal                  @db.Decimal(14, 2) // 누적 퇴직금
+  averageWage             Decimal                  @db.Decimal(12, 2) // 평균임금
+  averageWageCalcPeriod   String? // 평균임금 계산 기간
+  serviceDays             Int // 재직일수
+  calculatedAmount        Decimal                  @db.Decimal(14, 2) // 계산된 퇴직금
+  paidAmount              Decimal                  @default(0) @db.Decimal(14, 2) // 지급액
+  lastCalculatedAt        DateTime?
+  notes                   String?
+  intermediateSettlements IntermediateSettlement[]
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+
+  @@index([employeeId])
+}
+
+enum RetirementPensionType {
+  DB // 확정급여형
+  DC // 확정기여형
+}
+
+model RetirementPension {
+  id                  String                @id @default(cuid())
+  employeeId          String
+  employee            Employee              @relation(fields: [employeeId], references: [id])
+  pensionType         RetirementPensionType
+  provider            String // 금융기관
+  accountNumber       String
+  monthlyContribution Decimal               @db.Decimal(12, 2) // 월 불입액
+  accumulatedAmount   Decimal               @default(0) @db.Decimal(14, 2) // 누적 금액
+  joinDate            DateTime
+  isActive            Boolean               @default(true)
+  notes               String?
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+
+  @@index([employeeId])
+  @@index([pensionType])
+  @@index([isActive])
+}
+
+model IntermediateSettlement {
+  id             String       @id @default(cuid())
+  severancePayId String
+  severancePay   SeverancePay @relation(fields: [severancePayId], references: [id], onDelete: Cascade)
+  settlementDate DateTime
+  amount         Decimal      @db.Decimal(14, 2)
+  reason         String // 중간정산 사유
+  serviceDays    Int // 정산 시점 재직일수
+  averageWage    Decimal      @db.Decimal(12, 2)
+  approvedBy     String?
+  notes          String?
+  createdAt      DateTime     @default(now())
+
+  @@index([severancePayId])
+  @@index([settlementDate])
+}
+
+// ============================================
+// 연말정산
+// ============================================
+
+enum TaxSettlementStatus {
+  NOT_STARTED // 미시작
+  IN_PROGRESS // 진행중
+  SUBMITTED // 제출 완료
+  COMPLETED // 완료
+  REVISED // 경정
+}
+
+model YearEndTaxSettlement {
+  id                 String              @id @default(cuid())
+  employeeId         String
+  employee           Employee            @relation(fields: [employeeId], references: [id])
+  year               Int
+  totalIncome        Decimal             @db.Decimal(14, 2) // 총급여
+  taxableIncome      Decimal             @db.Decimal(14, 2) // 과세표준
+  calculatedTax      Decimal             @db.Decimal(12, 2) // 산출세액
+  paidTax            Decimal             @db.Decimal(12, 2) // 기납부세액
+  refundAmount       Decimal             @default(0) @db.Decimal(12, 2) // 환급액
+  additionalTax      Decimal             @default(0) @db.Decimal(12, 2) // 추가납부액
+  status             TaxSettlementStatus @default(NOT_STARTED)
+  deductions         TaxDeduction[]
+  submittedAt        DateTime?
+  completedAt        DateTime?
+  simplifiedDataFile String? // 국세청 간소화 자료 파일 경로
+  notes              String?
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  @@unique([employeeId, year])
+  @@index([employeeId])
+  @@index([year])
+  @@index([status])
+}
+
+enum TaxDeductionCategory {
+  INSURANCE // 보험료
+  MEDICAL // 의료비
+  EDUCATION // 교육비
+  DONATION // 기부금
+  CREDIT_CARD // 신용카드
+  PENSION_SAVING // 연금저축
+  HOUSING // 주택자금
+  DEPENDENT // 부양가족
+  OTHER // 기타
+}
+
+model TaxDeduction {
+  id              String               @id @default(cuid())
+  settlementId    String
+  settlement      YearEndTaxSettlement @relation(fields: [settlementId], references: [id], onDelete: Cascade)
+  category        TaxDeductionCategory
+  item            String // 세부 항목
+  amount          Decimal              @db.Decimal(12, 2) // 공제 금액
+  deductionAmount Decimal              @db.Decimal(12, 2) // 실제 공제액
+  proof           String? // 증빙 서류
+  notes           String?
+  createdAt       DateTime             @default(now())
+
+  @@index([settlementId])
+  @@index([category])
+}
+
+model DependentFamily {
+  id             String    @id @default(cuid())
+  employeeId     String
+  employee       Employee  @relation(fields: [employeeId], references: [id])
+  name           String
+  relationship   String // 관계 (배우자, 자녀, 부모 등)
+  residentNumber String? // 주민등록번호 (암호화)
+  birthDate      DateTime?
+  isDisabled     Boolean   @default(false)
+  isEligible     Boolean   @default(true) // 공제 대상 여부
+  startYear      Int // 공제 시작 연도
+  endYear        Int? // 공제 종료 연도
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([employeeId])
+  @@index([isEligible])
+}
 // ============================================
 // BENEFITS AND PAYROLL MANAGEMENT EXTENSION
 // ============================================
@@ -4365,320 +4765,5 @@ model DependentFamily {
   @@index([isEligible])
 }
 // ============================================
-// PERFORMANCE EVALUATION EXTENSION
+// BENEFITS AND PAYROLL MANAGEMENT EXTENSION
 // ============================================
-
-// ============================================
-// 평가 기준 관리
-// ============================================
-
-model EvaluationCycle {
-  id          String           @id @default(cuid())
-  periodId    String
-  period      EvaluationPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
-  cycleName   String           // 1차, 2차 평가
-  cycleOrder  Int              // 순서
-  startDate   DateTime
-  endDate     DateTime
-  isActive    Boolean          @default(true)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-
-  @@index([periodId])
-  @@index([isActive])
-}
-
-model EvaluationGroup {
-  id              String           @id @default(cuid())
-  periodId        String
-  period          EvaluationPeriod @relation(fields: [periodId], references: [id], onDelete: Cascade)
-  name            String
-  targetPositions String[]         // 대상 직급 코드
-  weightRatio     Json             // {"performance": 60, "competency": 30, "360": 10}
-  gradeDistribution Json?          // {"S": 10, "A": 20, "B": 40, "C": 20, "D": 10}
-  isActive        Boolean          @default(true)
-  indicators      CompetencyIndicator[]
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-
-  @@index([periodId])
-  @@index([isActive])
-}
-
-model KPIIndicator {
-  id             String       @id @default(cuid())
-  organizationId String
-  organization   Organization @relation(fields: [organizationId], references: [id])
-  year           Int
-  quarter        Int?         // 1, 2, 3, 4 or null for annual
-  indicator      String       // KPI 지표명
-  description    String?
-  target         Decimal      @db.Decimal(15, 2) // 목표치
-  actual         Decimal?     @db.Decimal(15, 2) // 실적
-  unit           String?      // 단위 (원, %, 건 등)
-  weight         Int          // 가중치 (%)
-  targetType     String       @default("HIGHER") // HIGHER, LOWER, EXACT
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
-
-  @@index([organizationId])
-  @@index([year])
-}
-
-// ============================================
-// 목표수립 (MBO/Goal Setting)
-// ============================================
-
-enum GoalStatus {
-  DRAFT       // 작성중
-  SUBMITTED   // 제출
-  LEVEL1_APPROVED // 1차 승인
-  LEVEL2_APPROVED // 2차 승인
-  FINAL_APPROVED  // 최종 승인
-  REJECTED    // 반려
-}
-
-model GoalSetting {
-  id                  String           @id @default(cuid())
-  employeeId          String
-  employee            Employee         @relation(fields: [employeeId], references: [id])
-  periodId            String
-  period              EvaluationPeriod @relation(fields: [periodId], references: [id])
-  goalTitle           String
-  goalDescription     String           @db.Text
-  measurableTarget    String           // 측정 가능한 목표
-  targetValue         String?          // 목표 수치
-  weight              Int              // 가중치 (%)
-  status              GoalStatus       @default(DRAFT)
-  approvals           GoalApproval[]
-  interimReviews      InterimReview[]
-  ratings             PerformanceRating[]
-  createdAt           DateTime         @default(now())
-  updatedAt           DateTime         @updatedAt
-
-  @@index([employeeId])
-  @@index([periodId])
-  @@index([status])
-}
-
-model GoalApproval {
-  id          String      @id @default(cuid())
-  goalId      String
-  goal        GoalSetting @relation(fields: [goalId], references: [id], onDelete: Cascade)
-  level       Int         // 1차, 2차
-  approverId  String      // 승인자 ID
-  status      String      @default("PENDING") // PENDING, APPROVED, REJECTED
-  comments    String?     @db.Text
-  approvedAt  DateTime?
-  createdAt   DateTime    @default(now())
-
-  @@index([goalId])
-  @@index([approverId])
-}
-
-model InterimReview {
-  id               String      @id @default(cuid())
-  goalId           String
-  goal             GoalSetting @relation(fields: [goalId], references: [id], onDelete: Cascade)
-  reviewDate       DateTime
-  progress         Int         // 진행률 (%)
-  achievements     String      @db.Text // 달성 내역
-  challenges       String?     @db.Text // 어려움/이슈
-  planActions      String?     @db.Text // 향후 계획
-  reviewerComments String?     @db.Text // 평가자 의견
-  reviewerId       String?
-  createdAt        DateTime    @default(now())
-  updatedAt        DateTime    @updatedAt
-
-  @@index([goalId])
-  @@index([reviewDate])
-}
-
-// ============================================
-// 평가 실행
-// ============================================
-
-model PerformanceRating {
-  id                String      @id @default(cuid())
-  evaluationId      String
-  evaluation        Evaluation  @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
-  goalId            String?
-  goal              GoalSetting? @relation(fields: [goalId], references: [id])
-  selfScore         Decimal?    @db.Decimal(5, 2)
-  managerScore      Decimal?    @db.Decimal(5, 2)
-  adjustedScore     Decimal?    @db.Decimal(5, 2) // 표준편차 조정 후
-  selfComments      String?     @db.Text
-  managerComments   String?     @db.Text
-  createdAt         DateTime    @default(now())
-  updatedAt         DateTime    @updatedAt
-
-  @@index([evaluationId])
-  @@index([goalId])
-}
-
-model CompetencyEvaluation {
-  id              String              @id @default(cuid())
-  evaluationId    String
-  evaluation      Evaluation          @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
-  competencyId    String
-  competency      CompetencyIndicator @relation(fields: [competencyId], references: [id])
-  selfScore       Decimal?            @db.Decimal(5, 2)
-  evaluatorScore  Decimal?            @db.Decimal(5, 2)
-  adjustedScore   Decimal?            @db.Decimal(5, 2)
-  comments        String?             @db.Text
-  createdAt       DateTime            @default(now())
-  updatedAt       DateTime            @updatedAt
-
-  @@index([evaluationId])
-  @@index([competencyId])
-}
-
-model CompetencyIndicator {
-  id          String                 @id @default(cuid())
-  groupId     String
-  group       EvaluationGroup        @relation(fields: [groupId], references: [id])
-  category    String                 // 기술역량, 업무역량, 리더십 등
-  name        String                 // 지표명
-  description String?                @db.Text
-  weight      Int                    // 가중치 (%)
-  evaluations CompetencyEvaluation[]
-  isActive    Boolean                @default(true)
-  createdAt   DateTime               @default(now())
-  updatedAt   DateTime               @updatedAt
-
-  @@index([groupId])
-  @@index([category])
-}
-
-enum RaterRelationship {
-  SUPERVISOR  // 상사
-  PEER        // 동료
-  SUBORDINATE // 부하
-  SELF        // 본인
-  HR          // HR
-}
-
-model MultiRaterFeedback {
-  id            String            @id @default(cuid())
-  evaluationId  String
-  evaluation    Evaluation        @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
-  raterId       String            // 평가자 ID
-  relationship  RaterRelationship // 평가자 관계
-  feedback      Json              // 항목별 점수 및 코멘트
-  isAnonymous   Boolean           @default(true)
-  submittedAt   DateTime?
-  createdAt     DateTime          @default(now())
-  updatedAt     DateTime          @updatedAt
-
-  @@index([evaluationId])
-  @@index([raterId])
-}
-
-// ============================================
-// 종합평가
-// ============================================
-
-enum FinalGrade {
-  S // 탁월
-  A // 우수
-  B // 보통
-  C // 개선필요
-  D // 부진
-}
-
-model FinalEvaluation {
-  id                  String            @id @default(cuid())
-  evaluationId        String            @unique
-  evaluation          Evaluation        @relation(fields: [evaluationId], references: [id], onDelete: Cascade)
-  performanceScore    Decimal           @db.Decimal(5, 2) // 업적평가 점수
-  competencyScore     Decimal           @db.Decimal(5, 2) // 능력평가 점수
-  multiRaterScore     Decimal?          @db.Decimal(5, 2) // 다면평가 점수
-  totalScore          Decimal           @db.Decimal(5, 2) // 총점
-  calculatedGrade     FinalGrade        // 계산된 등급
-  finalGrade          FinalGrade        // 최종 등급 (인사위원회 조정 가능)
-  hrCommitteeComments String?           @db.Text // 인사위원회 의견
-  departmentComments  String?           @db.Text // 부서장 의견
-  isAppealed          Boolean           @default(false)
-  appeals             EvaluationAppeal[]
-  createdAt           DateTime          @default(now())
-  updatedAt           DateTime          @updatedAt
-
-  @@index([finalGrade])
-}
-
-enum AppealStatus {
-  PENDING  // 검토중
-  ACCEPTED // 수용
-  REJECTED // 기각
-}
-
-model EvaluationAppeal {
-  id               String          @id @default(cuid())
-  finalEvalId      String
-  finalEval        FinalEvaluation @relation(fields: [finalEvalId], references: [id], onDelete: Cascade)
-  reason           String          @db.Text // 이의제기 사유
-  evidences        Json?           // 증빙 자료
-  requestedAt      DateTime        @default(now())
-  status           AppealStatus    @default(PENDING)
-  reviewerId       String?         // 검토자
-  reviewerComments String?         @db.Text
-  decision         String?         // 결정 내용
-  resolvedAt       DateTime?
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
-
-  @@index([finalEvalId])
-  @@index([status])
-}
-
-// ============================================
-// 시스템 관리
-// ============================================
-
-model SystemCode {
-  id          String   @id @default(cuid())
-  groupCode   String   // 그룹 코드 (예: POSITION, DEPT_TYPE)
-  groupName   String   // 그룹명
-  code        String   // 개별 코드
-  name        String   // 코드명
-  description String?
-  sortOrder   Int      @default(0)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@unique([groupCode, code])
-  @@index([groupCode])
-  @@index([isActive])
-}
-
-model PermissionGroup {
-  id          String   @id @default(cuid())
-  code        String   @unique
-  name        String
-  description String?
-  permissions Json     // 권한 목록 배열
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  @@index([code])
-  @@index([isActive])
-}
-
-model MenuPermission {
-  id                  String   @id @default(cuid())
-  menuPath            String   @unique // /admin/employees
-  menuName            String
-  parentPath          String?  // 부모 메뉴 경로
-  icon                String?  // 아이콘
-  requiredPermissions String[] // 필요 권한 코드 배열
-  sortOrder           Int      @default(0)
-  isVisible           Boolean  @default(true)
-  isActive            Boolean  @default(true)
-  createdAt           DateTime @default(now())
-  updatedAt           DateTime @updatedAt
-
-  @@index([parentPath])
-  @@index([isActive])
-}

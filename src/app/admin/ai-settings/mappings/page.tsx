@@ -69,7 +69,7 @@ export default function AIFeatureMappingsPage() {
   const [allModels, setAllModels] = useState<Model[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<AIFeatureType | null>(null);
-  
+
   // 편집 상태
   const [editingFeature, setEditingFeature] = useState<AIFeatureType | null>(null);
   const [editForm, setEditForm] = useState({
@@ -85,20 +85,20 @@ export default function AIFeatureMappingsPage() {
     const loadData = async () => {
       try {
         setLoading(true);
-        
+
         // 매핑 로드
         const mappingsRes = await fetch("/api/admin/ai-feature-mappings");
         const mappingsData = await mappingsRes.json();
         if (mappingsData.success) {
           setMappings(mappingsData.data);
         }
-        
+
         // Provider 로드
         const providersRes = await fetch("/api/admin/ai-providers");
         const providersData = await providersRes.json();
         if (providersData.success) {
           setProviders(providersData.data);
-          
+
           // 각 Provider의 모델 로드
           const modelsPromises = providersData.data.map(async (p: Provider) => {
             const modelsRes = await fetch(`/api/admin/ai-providers/${p.id}/models`);
@@ -108,7 +108,7 @@ export default function AIFeatureMappingsPage() {
             }
             return [];
           });
-          
+
           const modelsArrays = await Promise.all(modelsPromises);
           setAllModels(modelsArrays.flat());
         }
@@ -118,7 +118,7 @@ export default function AIFeatureMappingsPage() {
         setLoading(false);
       }
     };
-    
+
     loadData();
   }, []);
 
@@ -138,7 +138,7 @@ export default function AIFeatureMappingsPage() {
           systemPrompt: editForm.systemPrompt || undefined,
         }),
       });
-      
+
       const data = await res.json();
       if (data.success) {
         // 매핑 다시 로드
@@ -189,7 +189,7 @@ export default function AIFeatureMappingsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <Loader2 className="h-6 w-6 animate-spin text-gray-400" />
       </div>
     );
   }
@@ -202,8 +202,8 @@ export default function AIFeatureMappingsPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">기능별 모델 매핑</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl font-bold text-white">기능별 모델 매핑</h1>
+          <p className="text-gray-400 mt-1">
             각 HR 기능에서 사용할 AI 모델을 설정합니다
           </p>
         </div>
@@ -228,12 +228,12 @@ export default function AIFeatureMappingsPage() {
         {FEATURE_TYPES.map((featureType) => {
           const mapping = getMappingForFeature(featureType);
           const isEditing = editingFeature === featureType;
-          
+
           return (
-            <Card key={featureType}>
+            <Card key={featureType} className="bg-gray-800 border-gray-700">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-base">
+                  <CardTitle className="text-base text-white">
                     {AI_FEATURE_LABELS[featureType]}
                   </CardTitle>
                   {mapping ? (
@@ -269,7 +269,7 @@ export default function AIFeatureMappingsPage() {
                         </SelectContent>
                       </Select>
                     </div>
-                    
+
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label>최대 토큰 (선택)</Label>
@@ -293,7 +293,7 @@ export default function AIFeatureMappingsPage() {
                         />
                       </div>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <Label>시스템 프롬프트 (선택)</Label>
                       <Textarea
@@ -303,7 +303,7 @@ export default function AIFeatureMappingsPage() {
                         rows={3}
                       />
                     </div>
-                    
+
                     <div className="flex items-center space-x-2">
                       <Switch
                         id={`default-${featureType}`}
@@ -312,7 +312,7 @@ export default function AIFeatureMappingsPage() {
                       />
                       <Label htmlFor={`default-${featureType}`}>기본 모델로 설정</Label>
                     </div>
-                    
+
                     <div className="flex justify-end gap-2">
                       <Button variant="outline" onClick={() => setEditingFeature(null)}>
                         취소
@@ -342,7 +342,7 @@ export default function AIFeatureMappingsPage() {
                           )}
                           {(mapping.maxTokensOverride || mapping.temperatureOverride) && (
                             <p>
-                              설정: 
+                              설정:
                               {mapping.maxTokensOverride && ` 토큰=${mapping.maxTokensOverride}`}
                               {mapping.temperatureOverride && ` 온도=${mapping.temperatureOverride}`}
                             </p>

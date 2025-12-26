@@ -121,8 +121,8 @@ export default function OKRAdminPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">OKR 관리</h1>
-          <p className="text-gray-500">목표 및 핵심 결과 관리</p>
+          <h1 className="text-2xl font-bold text-white">OKR 관리</h1>
+          <p className="text-gray-400 mt-1">목표 및 핵심 결과 관리</p>
         </div>
         <div className="flex items-center gap-3">
           <Select value={period} onValueChange={setPeriod}>
@@ -144,49 +144,49 @@ export default function OKRAdminPage() {
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="pb-2">
-            <CardDescription>전체 목표</CardDescription>
-            <CardTitle className="text-3xl">{dashboard?.summary.total || 0}</CardTitle>
+            <CardDescription className="text-gray-400">전체 목표</CardDescription>
+            <CardTitle className="text-3xl text-white">{dashboard?.summary.total || 0}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-2 text-sm text-gray-500">
+            <div className="flex items-center gap-2 text-sm text-gray-400">
               <Target className="w-4 h-4" />
               <span>활성: {dashboard?.summary.active || 0}</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="pb-2">
-            <CardDescription>평균 진행률</CardDescription>
-            <CardTitle className="text-3xl">{dashboard?.summary.avgProgress || 0}%</CardTitle>
+            <CardDescription className="text-gray-400">평균 진행률</CardDescription>
+            <CardTitle className="text-3xl text-white">{dashboard?.summary.avgProgress || 0}%</CardTitle>
           </CardHeader>
           <CardContent>
             <Progress value={dashboard?.summary.avgProgress || 0} className="h-2" />
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="pb-2">
-            <CardDescription>완료된 목표</CardDescription>
-            <CardTitle className="text-3xl text-green-600">{dashboard?.summary.completed || 0}</CardTitle>
+            <CardDescription className="text-gray-400">완료된 목표</CardDescription>
+            <CardTitle className="text-3xl text-green-400">{dashboard?.summary.completed || 0}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-2 text-sm text-green-600">
+            <div className="flex items-center gap-2 text-sm text-green-400">
               <CheckCircle className="w-4 h-4" />
               <span>달성 완료</span>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="pb-2">
-            <CardDescription>위험 목표</CardDescription>
-            <CardTitle className="text-3xl text-orange-600">{dashboard?.atRisk?.length || 0}</CardTitle>
+            <CardDescription className="text-gray-400">위험 목표</CardDescription>
+            <CardTitle className="text-3xl text-orange-400">{dashboard?.atRisk?.length || 0}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-2 text-sm text-orange-600">
+            <div className="flex items-center gap-2 text-sm text-orange-400">
               <AlertTriangle className="w-4 h-4" />
               <span>진행률 30% 미만</span>
             </div>
@@ -196,55 +196,55 @@ export default function OKRAdminPage() {
 
       {/* Level Distribution */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-2">
               <Badge className={levelColors.COMPANY}>전사</Badge>
             </CardDescription>
-            <CardTitle>{dashboard?.byLevel.company || 0}개 목표</CardTitle>
+            <CardTitle className="text-white">{dashboard?.byLevel.company || 0}개 목표</CardTitle>
           </CardHeader>
           <CardContent>
-            <Progress 
-              value={dashboard?.levelProgress?.find(l => l.level === 'COMPANY')?.avgProgress || 0} 
-              className="h-2" 
+            <Progress
+              value={dashboard?.levelProgress?.find(l => l.level === 'COMPANY')?.avgProgress || 0}
+              className="h-2"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-400 mt-1">
               평균 {dashboard?.levelProgress?.find(l => l.level === 'COMPANY')?.avgProgress || 0}%
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-2">
               <Badge className={levelColors.DEPARTMENT}>부서</Badge>
             </CardDescription>
-            <CardTitle>{dashboard?.byLevel.department || 0}개 목표</CardTitle>
+            <CardTitle className="text-white">{dashboard?.byLevel.department || 0}개 목표</CardTitle>
           </CardHeader>
           <CardContent>
-            <Progress 
-              value={dashboard?.levelProgress?.find(l => l.level === 'DEPARTMENT')?.avgProgress || 0} 
-              className="h-2" 
+            <Progress
+              value={dashboard?.levelProgress?.find(l => l.level === 'DEPARTMENT')?.avgProgress || 0}
+              className="h-2"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-400 mt-1">
               평균 {dashboard?.levelProgress?.find(l => l.level === 'DEPARTMENT')?.avgProgress || 0}%
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="pb-2">
             <CardDescription className="flex items-center gap-2">
               <Badge className={levelColors.INDIVIDUAL}>개인</Badge>
             </CardDescription>
-            <CardTitle>{dashboard?.byLevel.individual || 0}개 목표</CardTitle>
+            <CardTitle className="text-white">{dashboard?.byLevel.individual || 0}개 목표</CardTitle>
           </CardHeader>
           <CardContent>
-            <Progress 
-              value={dashboard?.levelProgress?.find(l => l.level === 'INDIVIDUAL')?.avgProgress || 0} 
-              className="h-2" 
+            <Progress
+              value={dashboard?.levelProgress?.find(l => l.level === 'INDIVIDUAL')?.avgProgress || 0}
+              className="h-2"
             />
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-400 mt-1">
               평균 {dashboard?.levelProgress?.find(l => l.level === 'INDIVIDUAL')?.avgProgress || 0}%
             </p>
           </CardContent>

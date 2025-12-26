@@ -8,8 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Briefcase, 
+import {
+  Briefcase,
   Plus,
   Users,
   Eye,
@@ -64,7 +64,7 @@ export default function JobPostingsPage() {
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  
+
   const [formData, setFormData] = useState({
     title: '',
     organizationId: '',
@@ -85,7 +85,7 @@ export default function JobPostingsPage() {
   const fetchPostings = async () => {
     try {
       setLoading(true);
-      const url = statusFilter !== 'all' 
+      const url = statusFilter !== 'all'
         ? `/api/job-postings?status=${statusFilter}`
         : '/api/job-postings';
       const response = await fetch(url);
@@ -111,7 +111,7 @@ export default function JobPostingsPage() {
           createdBy: 'admin',
         }),
       });
-      
+
       if (response.ok) {
         setShowCreateForm(false);
         fetchPostings();
@@ -140,7 +140,7 @@ export default function JobPostingsPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       });
-      
+
       if (response.ok) {
         fetchPostings();
       }
@@ -151,12 +151,12 @@ export default function JobPostingsPage() {
 
   const deletePosting = async (id: string) => {
     if (!confirm('이 채용 공고를 삭제하시겠습니까?')) return;
-    
+
     try {
       const response = await fetch(`/api/job-postings/${id}`, {
         method: 'DELETE',
       });
-      
+
       if (response.ok) {
         fetchPostings();
       }
@@ -177,8 +177,8 @@ export default function JobPostingsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">채용 공고</h1>
-          <p className="text-muted-foreground">채용 공고를 관리하고 지원자를 모집합니다.</p>
+          <h1 className="text-2xl font-bold text-white">채용 공고</h1>
+          <p className="text-gray-400 mt-1">채용 공고를 관리하고 지원자를 모집합니다.</p>
         </div>
         <Button onClick={() => setShowCreateForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
@@ -188,31 +188,31 @@ export default function JobPostingsPage() {
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">전체 공고</CardTitle>
-            <Briefcase className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-white">전체 공고</CardTitle>
+            <Briefcase className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
+            <div className="text-2xl font-bold text-white">{stats.total}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">게시중</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">게시중</CardTitle>
             <Globe className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.published}</div>
+            <div className="text-2xl font-bold text-green-400">{stats.published}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">총 지원자</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">총 지원자</CardTitle>
             <Users className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.totalApplications}</div>
+            <div className="text-2xl font-bold text-blue-400">{stats.totalApplications}</div>
           </CardContent>
         </Card>
       </div>
@@ -235,22 +235,22 @@ export default function JobPostingsPage() {
 
       {/* Postings List */}
       {loading ? (
-        <div className="text-center py-8 text-muted-foreground">로딩 중...</div>
+        <div className="text-center py-8 text-gray-400">로딩 중...</div>
       ) : postings.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-8 text-muted-foreground">
+        <Card className="bg-gray-800 border-gray-700">
+          <CardContent className="text-center py-8 text-gray-400">
             등록된 채용 공고가 없습니다.
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4">
           {postings.map(posting => (
-            <Card key={posting.id}>
+            <Card key={posting.id} className="bg-gray-800 border-gray-700">
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-lg">{posting.title}</h3>
+                      <h3 className="font-semibold text-lg text-white">{posting.title}</h3>
                       <Badge className={statusColors[posting.status]}>
                         {statusLabels[posting.status]}
                       </Badge>
@@ -258,7 +258,7 @@ export default function JobPostingsPage() {
                         {employmentTypeLabels[posting.employmentType]}
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-4 text-sm text-gray-400">
                       {posting.location && <span>📍 {posting.location}</span>}
                       {posting.salaryRange && <span>💰 {posting.salaryRange}</span>}
                       {posting.closingDate && (
@@ -270,11 +270,11 @@ export default function JobPostingsPage() {
                       <span className="text-sm">{posting._count.applications}명 지원</span>
                     </div>
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     {posting.status === 'DRAFT' && (
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         onClick={() => updateStatus(posting.id, 'PUBLISHED')}
                       >
                         <Globe className="h-4 w-4 mr-1" />
@@ -282,8 +282,8 @@ export default function JobPostingsPage() {
                       </Button>
                     )}
                     {posting.status === 'PUBLISHED' && (
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         variant="outline"
                         onClick={() => updateStatus(posting.id, 'CLOSED')}
                       >
@@ -296,8 +296,8 @@ export default function JobPostingsPage() {
                     <Button variant="outline" size="icon">
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="icon"
                       onClick={() => deletePosting(posting.id)}
                     >

@@ -17,7 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { 
+import {
   TrendingUp,
   TrendingDown,
   Users,
@@ -181,54 +181,54 @@ export default function HRAnalyticsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">HR 분석</h1>
-          <p className="text-muted-foreground">데이터 기반 HR 의사결정을 지원합니다.</p>
+          <h1 className="text-2xl font-bold text-white">HR 분석</h1>
+          <p className="text-gray-400 mt-1">데이터 기반 HR 의사결정을 지원합니다.</p>
         </div>
       </div>
 
       {/* Key Metrics */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">조직 건강도</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">조직 건강도</CardTitle>
             <Heart className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2">
-              <div className="text-2xl font-bold">{latestHealth?.overallScore?.toFixed(0) || '-'}</div>
-              <span className="text-sm text-muted-foreground">/ 100</span>
+              <div className="text-2xl font-bold text-white">{latestHealth?.overallScore?.toFixed(0) || '-'}</div>
+              <span className="text-sm text-gray-400">/ 100</span>
               {latestHealth?.trend === 'UP' && <TrendingUp className="h-4 w-4 text-green-500" />}
               {latestHealth?.trend === 'DOWN' && <TrendingDown className="h-4 w-4 text-red-500" />}
             </div>
             <Progress value={latestHealth?.overallScore || 0} className="mt-2" />
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">이탈 위험 인원</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">이탈 위험 인원</CardTitle>
             <AlertTriangle className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{highRiskCount}</div>
-            <p className="text-xs text-muted-foreground">HIGH/CRITICAL 레벨</p>
+            <div className="text-2xl font-bold text-orange-400">{highRiskCount}</div>
+            <p className="text-xs text-gray-400">HIGH/CRITICAL 레벨</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">이직률</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">이직률</CardTitle>
             <Users className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{latestHealth?.turnoverRate?.toFixed(1) || '-'}%</div>
+            <div className="text-2xl font-bold text-white">{latestHealth?.turnoverRate?.toFixed(1) || '-'}%</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">참여도</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">참여도</CardTitle>
             <Target className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{latestHealth?.engagementScore?.toFixed(0) || '-'}</div>
+            <div className="text-2xl font-bold text-white">{latestHealth?.engagementScore?.toFixed(0) || '-'}</div>
           </CardContent>
         </Card>
       </div>

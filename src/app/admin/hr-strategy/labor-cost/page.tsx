@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  DollarSign, 
+import {
+  DollarSign,
   Plus,
   TrendingUp,
   BarChart3,
@@ -44,7 +44,7 @@ export default function LaborCostPage() {
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
-  
+
   const [formData, setFormData] = useState({
     yearMonth: '',
     organizationId: '',
@@ -99,7 +99,7 @@ export default function LaborCostPage() {
           organizationId: formData.organizationId || null,
         }),
       });
-      
+
       if (response.ok) {
         setShowCreateForm(false);
         fetchForecasts();
@@ -151,8 +151,8 @@ export default function LaborCostPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">인건비 예측</h1>
-          <p className="text-muted-foreground">급여, 상여, 복리후생비를 포함한 인건비를 예측합니다.</p>
+          <h1 className="text-2xl font-bold text-white">인건비 예측</h1>
+          <p className="text-gray-400 mt-1">급여, 상여, 복리후생비를 포함한 인건비를 예측합니다.</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm">
@@ -183,40 +183,40 @@ export default function LaborCostPage() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">기본급 합계</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-white">기본급 합계</CardTitle>
+            <DollarSign className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalBaseSalary)}</div>
+            <div className="text-2xl font-bold text-white">{formatCurrency(totalBaseSalary)}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">상여금 합계</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-white">상여금 합계</CardTitle>
+            <TrendingUp className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalBonus)}</div>
+            <div className="text-2xl font-bold text-white">{formatCurrency(totalBonus)}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">복리후생비</CardTitle>
-            <BarChart3 className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-white">복리후생비</CardTitle>
+            <BarChart3 className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalBenefits)}</div>
+            <div className="text-2xl font-bold text-white">{formatCurrency(totalBenefits)}</div>
           </CardContent>
         </Card>
-        <Card className="bg-gradient-to-r from-blue-50 to-indigo-50">
+        <Card className="bg-gray-800 border-gray-700 bg-gradient-to-r from-blue-900/50 to-indigo-900/50">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">총 인건비</CardTitle>
-            <DollarSign className="h-4 w-4 text-blue-600" />
+            <CardTitle className="text-sm font-medium text-white">총 인건비</CardTitle>
+            <DollarSign className="h-4 w-4 text-blue-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{formatCurrency(grandTotal)}</div>
+            <div className="text-2xl font-bold text-blue-400">{formatCurrency(grandTotal)}</div>
           </CardContent>
         </Card>
       </div>
@@ -230,10 +230,10 @@ export default function LaborCostPage() {
 
         <TabsContent value="list" className="space-y-4">
           {loading ? (
-            <div className="text-center py-8 text-muted-foreground">로딩 중...</div>
+            <div className="text-center py-8 text-gray-400">로딩 중...</div>
           ) : Object.keys(byMonth).length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-8 text-muted-foreground">
+            <Card className="bg-gray-800 border-gray-700">
+              <CardContent className="text-center py-8 text-gray-400">
                 등록된 인건비 예측이 없습니다.
               </CardContent>
             </Card>
@@ -242,7 +242,7 @@ export default function LaborCostPage() {
               .sort(([a], [b]) => b.localeCompare(a))
               .map(([yearMonth, items]) => {
                 const monthTotal = items.reduce((sum, f) => sum + parseFloat(f.totalCost), 0);
-                
+
                 return (
                   <Card key={yearMonth}>
                     <CardHeader>
@@ -256,8 +256,8 @@ export default function LaborCostPage() {
                     <CardContent>
                       <div className="space-y-2">
                         {items.map(forecast => (
-                          <div 
-                            key={forecast.id} 
+                          <div
+                            key={forecast.id}
                             className="flex items-center justify-between py-2 border-b last:border-0"
                           >
                             <span className="font-medium">

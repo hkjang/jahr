@@ -72,7 +72,7 @@ export default function AICallLogsPage() {
     offset: 0,
     hasMore: false,
   });
-  
+
   // 필터
   const [filters, setFilters] = useState({
     status: "",
@@ -85,19 +85,19 @@ export default function AICallLogsPage() {
   const loadLogs = async (resetOffset = false) => {
     try {
       setLoading(true);
-      
+
       const params = new URLSearchParams();
       params.set("limit", pagination.limit.toString());
       params.set("offset", resetOffset ? "0" : pagination.offset.toString());
-      
+
       if (filters.status) params.set("status", filters.status);
       if (filters.featureType) params.set("featureType", filters.featureType);
       if (filters.startDate) params.set("startDate", filters.startDate);
       if (filters.endDate) params.set("endDate", filters.endDate);
-      
+
       const res = await fetch(`/api/admin/ai-call-logs?${params}`);
       const data = await res.json();
-      
+
       if (data.success) {
         setLogs(data.data.logs);
         setPagination(data.data.pagination);
@@ -145,8 +145,8 @@ export default function AICallLogsPage() {
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">AI 호출 로그</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl font-bold text-white">AI 호출 로그</h1>
+          <p className="text-gray-400 mt-1">
             AI 사용 이력 및 감사 로그
           </p>
         </div>
@@ -155,44 +155,44 @@ export default function AICallLogsPage() {
       {/* Stats */}
       {stats && (
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-          <Card>
+          <Card className="bg-gray-800 border-gray-700">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">전체</CardTitle>
+              <CardTitle className="text-sm font-medium text-gray-400">전체</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">{stats.total}</p>
+              <p className="text-2xl font-bold text-white">{stats.total}</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-gray-800 border-gray-700">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-green-600">성공</CardTitle>
+              <CardTitle className="text-sm font-medium text-green-400">성공</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-green-600">{stats.byStatus.SUCCESS || 0}</p>
+              <p className="text-2xl font-bold text-green-400">{stats.byStatus.SUCCESS || 0}</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-gray-800 border-gray-700">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-red-600">오류</CardTitle>
+              <CardTitle className="text-sm font-medium text-red-400">오류</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-red-600">{stats.byStatus.ERROR || 0}</p>
+              <p className="text-2xl font-bold text-red-400">{stats.byStatus.ERROR || 0}</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-gray-800 border-gray-700">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-yellow-600">타임아웃</CardTitle>
+              <CardTitle className="text-sm font-medium text-yellow-400">타임아웃</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-yellow-600">{stats.byStatus.TIMEOUT || 0}</p>
+              <p className="text-2xl font-bold text-yellow-400">{stats.byStatus.TIMEOUT || 0}</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="bg-gray-800 border-gray-700">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-orange-600">제한 초과</CardTitle>
+              <CardTitle className="text-sm font-medium text-orange-400">제한 초과</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold text-orange-600">{stats.byStatus.RATE_LIMITED || 0}</p>
+              <p className="text-2xl font-bold text-orange-400">{stats.byStatus.RATE_LIMITED || 0}</p>
             </CardContent>
           </Card>
         </div>
@@ -337,7 +337,7 @@ export default function AICallLogsPage() {
                   ))}
                 </TableBody>
               </Table>
-              
+
               {/* Pagination */}
               <div className="flex items-center justify-between px-4 py-3 border-t">
                 <p className="text-sm text-muted-foreground">

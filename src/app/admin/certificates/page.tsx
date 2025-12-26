@@ -16,8 +16,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { 
-  FileCheck2, 
+import {
+  FileCheck2,
   Plus,
   Copy,
   Send,
@@ -146,32 +146,32 @@ export default function CertificatesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">증명서 관리</h1>
-        <p className="text-muted-foreground">증명서 템플릿 및 발급을 관리합니다.</p>
+        <h1 className="text-2xl font-bold text-white">증명서 관리</h1>
+        <p className="text-gray-400 mt-1">증명서 템플릿 및 발급을 관리합니다.</p>
       </div>
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">템플릿</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">템플릿</CardTitle>
             <FileCheck2 className="h-4 w-4 text-blue-500" />
           </CardHeader>
-          <CardContent><div className="text-2xl font-bold">{templates.length}</div></CardContent>
+          <CardContent><div className="text-2xl font-bold text-white">{templates.length}</div></CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">발급 완료</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">발급 완료</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-500" />
           </CardHeader>
-          <CardContent><div className="text-2xl font-bold">{issuedCount}</div></CardContent>
+          <CardContent><div className="text-2xl font-bold text-white">{issuedCount}</div></CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">총 발급</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">총 발급</CardTitle>
             <Send className="h-4 w-4 text-purple-500" />
           </CardHeader>
-          <CardContent><div className="text-2xl font-bold">{issuances.length}</div></CardContent>
+          <CardContent><div className="text-2xl font-bold text-white">{issuances.length}</div></CardContent>
         </Card>
       </div>
 

@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { 
+import {
   Users,
   Search,
   Star,
@@ -48,7 +48,7 @@ export default function TalentPoolPage() {
   const fetchTalentPool = async () => {
     try {
       setLoading(true);
-      const url = searchQuery 
+      const url = searchQuery
         ? `/api/talent-pool?search=${encodeURIComponent(searchQuery)}`
         : '/api/talent-pool';
       const response = await fetch(url);
@@ -73,29 +73,29 @@ export default function TalentPoolPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">인재풀</h1>
-          <p className="text-muted-foreground">미채용 우수 인재를 관리합니다.</p>
+          <h1 className="text-2xl font-bold text-white">인재풀</h1>
+          <p className="text-gray-400 mt-1">미채용 우수 인재를 관리합니다.</p>
         </div>
       </div>
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-2">
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">인재풀 인원</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">인재풀 인원</CardTitle>
             <Star className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{applicants.length}</div>
+            <div className="text-2xl font-bold text-white">{applicants.length}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">총 지원 이력</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-white">총 지원 이력</CardTitle>
+            <Users className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-white">
               {applicants.reduce((sum, a) => sum + a._count.applications, 0)}
             </div>
           </CardContent>
@@ -105,7 +105,7 @@ export default function TalentPoolPage() {
       {/* Search */}
       <form onSubmit={handleSearch} className="flex gap-2">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -118,10 +118,10 @@ export default function TalentPoolPage() {
 
       {/* Talent List */}
       {loading ? (
-        <div className="text-center py-8 text-muted-foreground">로딩 중...</div>
+        <div className="text-center py-8 text-gray-400">로딩 중...</div>
       ) : applicants.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-8 text-muted-foreground">
+        <Card className="bg-gray-800 border-gray-700">
+          <CardContent className="text-center py-8 text-gray-400">
             인재풀에 등록된 인재가 없습니다.
           </CardContent>
         </Card>

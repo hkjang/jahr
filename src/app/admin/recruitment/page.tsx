@@ -3,9 +3,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { 
-  Briefcase, 
-  Users, 
+import {
+  Briefcase,
+  Users,
   GitBranch,
   Star,
   FileText,
@@ -47,25 +47,25 @@ export default function RecruitmentPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">채용 관리</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-2xl font-bold text-white">채용 관리</h1>
+        <p className="text-gray-400 mt-1">
           채용 공고 등록부터 입사까지의 전체 채용 프로세스를 관리합니다.
         </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         {features.map((feature) => (
-          <Card key={feature.href} className="hover:shadow-lg transition-shadow">
+          <Card key={feature.href} className="bg-gray-800 border-gray-700 hover:shadow-lg transition-shadow">
             <CardHeader>
               <div className="flex items-center gap-3">
                 <div className={`p-2 rounded-lg ${feature.color}`}>
                   <feature.icon className="h-5 w-5 text-white" />
                 </div>
-                <CardTitle className="text-lg">{feature.title}</CardTitle>
+                <CardTitle className="text-lg text-white">{feature.title}</CardTitle>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              <CardDescription className="min-h-[40px]">
+              <CardDescription className="min-h-[40px] text-gray-400">
                 {feature.description}
               </CardDescription>
               <Button variant="outline" asChild className="w-full">

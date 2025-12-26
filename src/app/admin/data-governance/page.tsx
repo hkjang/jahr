@@ -16,8 +16,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { 
-  AlertTriangle, 
+import {
+  AlertTriangle,
   CheckCircle,
   Database,
   History,
@@ -86,13 +86,13 @@ export default function DataGovernancePage() {
   const [snapshots, setSnapshots] = useState<DataSnapshot[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('quality');
-  
+
   // Dialog states
   const [issueDialogOpen, setIssueDialogOpen] = useState(false);
   const [deletionDialogOpen, setDeletionDialogOpen] = useState(false);
   const [snapshotDetailOpen, setSnapshotDetailOpen] = useState(false);
   const [selectedSnapshot, setSelectedSnapshot] = useState<DataSnapshot | null>(null);
-  
+
   // Form states
   const [newIssue, setNewIssue] = useState({
     issueType: 'MISSING_DATA',
@@ -102,7 +102,7 @@ export default function DataGovernancePage() {
     description: '',
     severity: 'MEDIUM',
   });
-  
+
   const [newDeletionRequest, setNewDeletionRequest] = useState({
     requesterId: '',
     targetUserId: '',
@@ -116,7 +116,7 @@ export default function DataGovernancePage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      
+
       const [issuesRes, deletionRes, snapshotsRes] = await Promise.all([
         fetch('/api/data-quality?resolved=false'),
         fetch('/api/data-deletion-requests'),
@@ -141,7 +141,7 @@ export default function DataGovernancePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newIssue),
       });
-      
+
       if (res.ok) {
         setIssueDialogOpen(false);
         setNewIssue({
@@ -167,7 +167,7 @@ export default function DataGovernancePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isResolved: true, resolvedBy: 'admin' }),
       });
-      
+
       if (res.ok) fetchData();
     } catch (error) {
       console.error('Failed to resolve issue:', error);
@@ -177,7 +177,7 @@ export default function DataGovernancePage() {
   // Delete Issue
   const handleDeleteIssue = async (id: string) => {
     if (!confirm('정말 삭제하시겠습니까?')) return;
-    
+
     try {
       const res = await fetch(`/api/data-quality/${id}`, { method: 'DELETE' });
       if (res.ok) fetchData();
@@ -194,7 +194,7 @@ export default function DataGovernancePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newDeletionRequest),
       });
-      
+
       if (res.ok) {
         setDeletionDialogOpen(false);
         setNewDeletionRequest({ requesterId: '', targetUserId: '', reason: '' });
@@ -213,7 +213,7 @@ export default function DataGovernancePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status, processedBy: 'admin' }),
       });
-      
+
       if (res.ok) fetchData();
     } catch (error) {
       console.error('Failed to process request:', error);
@@ -232,46 +232,46 @@ export default function DataGovernancePage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">데이터 거버넌스</h1>
-        <p className="text-muted-foreground">데이터 품질 및 보안을 관리합니다.</p>
+        <h1 className="text-2xl font-bold text-white">데이터 거버넌스</h1>
+        <p className="text-gray-400 mt-1">데이터 품질 및 보안을 관리합니다.</p>
       </div>
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">품질 이슈</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">품질 이슈</CardTitle>
             <AlertTriangle className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.pendingIssues}</div>
+            <div className="text-2xl font-bold text-white">{stats.pendingIssues}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">심각 이슈</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">심각 이슈</CardTitle>
             <AlertTriangle className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats.highSeverity}</div>
+            <div className="text-2xl font-bold text-red-400">{stats.highSeverity}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">삭제 요청</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">삭제 요청</CardTitle>
             <Trash2 className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.pendingDeletions}</div>
+            <div className="text-2xl font-bold text-white">{stats.pendingDeletions}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">최근 변경</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">최근 변경</CardTitle>
             <History className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.recentChanges}</div>
+            <div className="text-2xl font-bold text-white">{stats.recentChanges}</div>
           </CardContent>
         </Card>
       </div>
@@ -292,29 +292,29 @@ export default function DataGovernancePage() {
               이슈 등록
             </Button>
           </div>
-          
+
           {loading ? (
-            <div className="text-center py-8 text-muted-foreground">로딩 중...</div>
+            <div className="text-center py-8 text-gray-400">로딩 중...</div>
           ) : issues.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-8 text-muted-foreground">
+            <Card className="bg-gray-800 border-gray-700">
+              <CardContent className="text-center py-8 text-gray-400">
                 <CheckCircle className="h-12 w-12 mx-auto mb-4 text-green-500" />
                 <p>미해결 품질 이슈가 없습니다.</p>
               </CardContent>
             </Card>
           ) : (
             issues.map(issue => (
-              <Card key={issue.id}>
+              <Card key={issue.id} className="bg-gray-800 border-gray-700">
                 <CardContent className="pt-6">
                   <div className="flex items-start justify-between">
                     <div className="space-y-2">
                       <div className="flex items-center gap-2">
                         <Badge className={severityColors[issue.severity]}>{issue.severity}</Badge>
                         <Badge variant="outline">{issueTypeLabels[issue.issueType]}</Badge>
-                        <span className="font-medium">{issue.entityType}.{issue.fieldName}</span>
+                        <span className="font-medium text-white">{issue.entityType}.{issue.fieldName}</span>
                       </div>
-                      <p className="text-sm text-muted-foreground">{issue.description}</p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-sm text-gray-400">{issue.description}</p>
+                      <p className="text-xs text-gray-500">
                         엔티티 ID: {issue.entityId} | {new Date(issue.createdAt).toLocaleDateString('ko-KR')}
                       </p>
                     </div>
@@ -342,7 +342,7 @@ export default function DataGovernancePage() {
               삭제 요청
             </Button>
           </div>
-          
+
           {deletionRequests.length === 0 ? (
             <Card>
               <CardContent className="text-center py-8 text-muted-foreground">
@@ -403,8 +403,8 @@ export default function DataGovernancePage() {
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                       <span>{snapshot.changedBy}</span>
                       <span>{new Date(snapshot.changedAt).toLocaleString('ko-KR')}</span>
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         variant="outline"
                         onClick={() => {
                           setSelectedSnapshot(snapshot);

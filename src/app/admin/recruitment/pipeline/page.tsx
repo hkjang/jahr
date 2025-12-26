@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { 
+import {
   Users,
   FileText,
   MessageSquare,
@@ -101,7 +101,7 @@ export default function RecruitmentPipelinePage() {
           status: result === 'PASSED' ? 'IN_REVIEW' : (result === 'FAILED' ? 'REJECTED' : 'IN_REVIEW'),
         }),
       });
-      
+
       if (response.ok) {
         fetchApplications();
       }
@@ -127,8 +127,8 @@ export default function RecruitmentPipelinePage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">채용 파이프라인</h1>
-          <p className="text-muted-foreground">지원자의 채용 단계를 관리합니다.</p>
+          <h1 className="text-2xl font-bold text-white">채용 파이프라인</h1>
+          <p className="text-gray-400 mt-1">지원자의 채용 단계를 관리합니다.</p>
         </div>
       </div>
 
@@ -136,12 +136,12 @@ export default function RecruitmentPipelinePage() {
       <div className="flex gap-2 overflow-x-auto pb-2">
         {stageOrder.map((stage, index) => (
           <div key={stage} className="flex items-center">
-            <Card className={`min-w-[120px] cursor-pointer transition-colors ${selectedStage === stage ? 'ring-2 ring-primary' : ''}`}
+            <Card className={`bg-gray-800 border-gray-700 min-w-[120px] cursor-pointer transition-colors ${selectedStage === stage ? 'ring-2 ring-primary' : ''}`}
               onClick={() => setSelectedStage(selectedStage === stage ? 'all' : stage)}
             >
               <CardContent className="p-4 text-center">
-                <div className="text-2xl font-bold">{stageCounts[stage]}</div>
-                <div className="text-xs text-muted-foreground">{stageLabels[stage]}</div>
+                <div className="text-2xl font-bold text-white">{stageCounts[stage]}</div>
+                <div className="text-xs text-gray-400">{stageLabels[stage]}</div>
               </CardContent>
             </Card>
             {index < stageOrder.length - 1 && (
@@ -168,10 +168,10 @@ export default function RecruitmentPipelinePage() {
 
       {/* Applications by Stage */}
       {loading ? (
-        <div className="text-center py-8 text-muted-foreground">로딩 중...</div>
+        <div className="text-center py-8 text-gray-400">로딩 중...</div>
       ) : applications.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-8 text-muted-foreground">
+        <Card className="bg-gray-800 border-gray-700">
+          <CardContent className="text-center py-8 text-gray-400">
             지원자가 없습니다.
           </CardContent>
         </Card>
@@ -180,11 +180,11 @@ export default function RecruitmentPipelinePage() {
           {(selectedStage === 'all' ? stageOrder : [selectedStage]).map(stage => {
             const stageApps = byStage[stage] || [];
             if (stageApps.length === 0) return null;
-            
+
             return (
-              <Card key={stage}>
+              <Card key={stage} className="bg-gray-800 border-gray-700">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2 text-white">
                     <span>{stageLabels[stage]}</span>
                     <Badge variant="secondary">{stageApps.length}명</Badge>
                   </CardTitle>
@@ -194,10 +194,10 @@ export default function RecruitmentPipelinePage() {
                     {stageApps.map(app => {
                       const currentIndex = stageOrder.indexOf(app.currentStage);
                       const nextStage = stageOrder[currentIndex + 1];
-                      
+
                       return (
-                        <div 
-                          key={app.id} 
+                        <div
+                          key={app.id}
                           className="flex items-center justify-between p-4 border rounded-lg hover:bg-muted/50"
                         >
                           <div className="flex items-center gap-4">
@@ -210,20 +210,20 @@ export default function RecruitmentPipelinePage() {
                               <p className="text-xs text-muted-foreground">{app.posting.title}</p>
                             </div>
                           </div>
-                          
+
                           <div className="flex items-center gap-4">
                             <Badge className={statusColors[app.status]}>
                               {statusLabels[app.status]}
                             </Badge>
-                            
+
                             <div className="flex items-center gap-2 text-sm text-muted-foreground">
                               <MessageSquare className="h-4 w-4" />
                               {app._count.evaluations}
                             </div>
-                            
+
                             <div className="flex gap-1">
                               {nextStage && (
-                                <Button 
+                                <Button
                                   size="sm"
                                   onClick={() => updateStage(app.id, nextStage, 'PASSED')}
                                 >
@@ -231,8 +231,8 @@ export default function RecruitmentPipelinePage() {
                                   합격
                                 </Button>
                               )}
-                              <Button 
-                                size="sm" 
+                              <Button
+                                size="sm"
                                 variant="outline"
                                 onClick={() => updateStage(app.id, app.currentStage, 'FAILED')}
                               >

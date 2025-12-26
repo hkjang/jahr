@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  Calculator, 
+import {
+  Calculator,
   Plus,
   Play,
   Trash2,
@@ -52,7 +52,7 @@ export default function SimulationPage() {
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -94,7 +94,7 @@ export default function SimulationPage() {
           createdBy: 'admin',
         }),
       });
-      
+
       if (response.ok) {
         setShowCreateForm(false);
         fetchScenarios();
@@ -111,7 +111,7 @@ export default function SimulationPage() {
       const response = await fetch(`/api/headcount-scenarios/${id}/analyze`, {
         method: 'POST',
       });
-      
+
       if (response.ok) {
         fetchScenarios();
       }
@@ -124,12 +124,12 @@ export default function SimulationPage() {
 
   const deleteScenario = async (id: string) => {
     if (!confirm('이 시나리오를 삭제하시겠습니까?')) return;
-    
+
     try {
       const response = await fetch(`/api/headcount-scenarios/${id}`, {
         method: 'DELETE',
       });
-      
+
       if (response.ok) {
         fetchScenarios();
       }
@@ -151,8 +151,8 @@ export default function SimulationPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">시나리오 분석</h1>
-          <p className="text-muted-foreground">증원·감원 시나리오를 생성하고 비용 영향을 분석합니다.</p>
+          <h1 className="text-2xl font-bold text-white">시나리오 분석</h1>
+          <p className="text-gray-400 mt-1">증원·감원 시나리오를 생성하고 비용 영향을 분석합니다.</p>
         </div>
         <Button onClick={() => setShowCreateForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
@@ -162,33 +162,33 @@ export default function SimulationPage() {
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">전체 시나리오</CardTitle>
-            <Calculator className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-white">전체 시나리오</CardTitle>
+            <Calculator className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{scenarios.length}</div>
+            <div className="text-2xl font-bold text-white">{scenarios.length}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">분석 완료</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">분석 완료</CardTitle>
             <TrendingUp className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-green-400">
               {scenarios.filter(s => s.status === 'COMPLETED').length}
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">대기 중</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">대기 중</CardTitle>
             <TrendingDown className="h-4 w-4 text-gray-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="text-2xl font-bold text-white">
               {scenarios.filter(s => s.status === 'DRAFT').length}
             </div>
           </CardContent>
@@ -197,10 +197,10 @@ export default function SimulationPage() {
 
       {/* Scenarios List */}
       {loading ? (
-        <div className="text-center py-8 text-muted-foreground">로딩 중...</div>
+        <div className="text-center py-8 text-gray-400">로딩 중...</div>
       ) : scenarios.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-8 text-muted-foreground">
+        <Card className="bg-gray-800 border-gray-700">
+          <CardContent className="text-center py-8 text-gray-400">
             생성된 시나리오가 없습니다.
           </CardContent>
         </Card>
@@ -209,7 +209,7 @@ export default function SimulationPage() {
           {scenarios.map(scenario => {
             const netChange = (scenario.changes.additions || 0) - (scenario.changes.reductions || 0);
             const costImpact = parseFloat(scenario.costImpact);
-            
+
             return (
               <Card key={scenario.id}>
                 <CardContent className="pt-6">
@@ -236,7 +236,7 @@ export default function SimulationPage() {
                         </span>
                       </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-4">
                       {scenario.status === 'COMPLETED' && (
                         <div className="text-right">
@@ -246,10 +246,10 @@ export default function SimulationPage() {
                           </p>
                         </div>
                       )}
-                      
+
                       <div className="flex gap-2">
                         {scenario.status === 'DRAFT' && (
-                          <Button 
+                          <Button
                             onClick={() => analyzeScenario(scenario.id)}
                             disabled={analyzing === scenario.id}
                           >
@@ -261,8 +261,8 @@ export default function SimulationPage() {
                             분석 실행
                           </Button>
                         )}
-                        <Button 
-                          variant="outline" 
+                        <Button
+                          variant="outline"
                           size="icon"
                           onClick={() => deleteScenario(scenario.id)}
                         >

@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  Building2, 
+import {
+  Building2,
   Plus,
   Play,
   Trash2,
@@ -66,7 +66,7 @@ export default function RestructurePage() {
   const [loading, setLoading] = useState(true);
   const [running, setRunning] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -120,7 +120,7 @@ export default function RestructurePage() {
           createdBy: 'admin',
         }),
       });
-      
+
       if (response.ok) {
         setShowCreateForm(false);
         fetchSimulations();
@@ -137,7 +137,7 @@ export default function RestructurePage() {
       const response = await fetch(`/api/org-simulations/${id}/run`, {
         method: 'POST',
       });
-      
+
       if (response.ok) {
         fetchSimulations();
       }
@@ -150,12 +150,12 @@ export default function RestructurePage() {
 
   const deleteSimulation = async (id: string) => {
     if (!confirm('이 시뮬레이션을 삭제하시겠습니까?')) return;
-    
+
     try {
       const response = await fetch(`/api/org-simulations/${id}`, {
         method: 'DELETE',
       });
-      
+
       if (response.ok) {
         fetchSimulations();
       }
@@ -169,8 +169,8 @@ export default function RestructurePage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">조직 개편 시뮬레이션</h1>
-          <p className="text-muted-foreground">조직 구조 변경의 영향을 분석합니다.</p>
+          <h1 className="text-2xl font-bold text-white">조직 개편 시뮬레이션</h1>
+          <p className="text-gray-400 mt-1">조직 구조 변경의 영향을 분석합니다.</p>
         </div>
         <Button onClick={() => setShowCreateForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
@@ -180,33 +180,33 @@ export default function RestructurePage() {
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">전체 시뮬레이션</CardTitle>
-            <GitBranch className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-white">전체 시뮬레이션</CardTitle>
+            <GitBranch className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{simulations.length}</div>
+            <div className="text-2xl font-bold text-white">{simulations.length}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">분석 완료</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">분석 완료</CardTitle>
             <Building2 className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-green-400">
               {simulations.filter(s => s.status === 'COMPLETED').length}
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">고위험</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">고위험</CardTitle>
             <AlertTriangle className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-2xl font-bold text-red-400">
               {simulations.filter(s => s.impactAnalysis?.riskLevel === 'HIGH').length}
             </div>
           </CardContent>
@@ -215,10 +215,10 @@ export default function RestructurePage() {
 
       {/* Simulations List */}
       {loading ? (
-        <div className="text-center py-8 text-muted-foreground">로딩 중...</div>
+        <div className="text-center py-8 text-gray-400">로딩 중...</div>
       ) : simulations.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-8 text-muted-foreground">
+        <Card className="bg-gray-800 border-gray-700">
+          <CardContent className="text-center py-8 text-gray-400">
             생성된 시뮬레이션이 없습니다.
           </CardContent>
         </Card>
@@ -245,10 +245,10 @@ export default function RestructurePage() {
                         <p className="text-sm text-muted-foreground">{simulation.description}</p>
                       )}
                     </div>
-                    
+
                     <div className="flex gap-2">
                       {simulation.status === 'DRAFT' && (
-                        <Button 
+                        <Button
                           onClick={() => runSimulation(simulation.id)}
                           disabled={running === simulation.id}
                         >
@@ -260,8 +260,8 @@ export default function RestructurePage() {
                           분석 실행
                         </Button>
                       )}
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         size="icon"
                         onClick={() => deleteSimulation(simulation.id)}
                       >

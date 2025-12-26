@@ -8,9 +8,9 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Users, 
-  Building2, 
+import {
+  Users,
+  Building2,
   Plus,
   AlertTriangle,
   CheckCircle
@@ -45,7 +45,7 @@ export default function HeadcountPage() {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     organizationId: '',
     limitCount: 0,
@@ -93,7 +93,7 @@ export default function HeadcountPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
-      
+
       if (response.ok) {
         setShowCreateForm(false);
         fetchLimits();
@@ -127,8 +127,8 @@ export default function HeadcountPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">정원 관리</h1>
-          <p className="text-muted-foreground">부서별 TO(Table of Organization)를 관리합니다.</p>
+          <h1 className="text-2xl font-bold text-white">정원 관리</h1>
+          <p className="text-gray-400 mt-1">부서별 TO(Table of Organization)를 관리합니다.</p>
         </div>
         <Button onClick={() => setShowCreateForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
@@ -138,48 +138,48 @@ export default function HeadcountPage() {
 
       {/* Summary Cards */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">정원 설정 조직</CardTitle>
-            <Building2 className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-white">정원 설정 조직</CardTitle>
+            <Building2 className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{limits.length}</div>
-            <p className="text-xs text-muted-foreground">개 부서</p>
+            <div className="text-2xl font-bold text-white">{limits.length}</div>
+            <p className="text-xs text-gray-400">개 부서</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">정원 초과</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">정원 초과</CardTitle>
             <AlertTriangle className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">
+            <div className="text-2xl font-bold text-red-400">
               {limits.filter(l => getOrgCurrentCount(l.organizationId) > l.limitCount).length}
             </div>
-            <p className="text-xs text-muted-foreground">개 부서에서 초과</p>
+            <p className="text-xs text-gray-400">개 부서에서 초과</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">정상 운영</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">정상 운영</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">
+            <div className="text-2xl font-bold text-green-400">
               {limits.filter(l => getOrgCurrentCount(l.organizationId) <= l.limitCount).length}
             </div>
-            <p className="text-xs text-muted-foreground">개 부서 정상</p>
+            <p className="text-xs text-gray-400">개 부서 정상</p>
           </CardContent>
         </Card>
       </div>
 
       {/* Limits List */}
       {loading ? (
-        <div className="text-center py-8 text-muted-foreground">로딩 중...</div>
+        <div className="text-center py-8 text-gray-400">로딩 중...</div>
       ) : limits.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-8 text-muted-foreground">
+        <Card className="bg-gray-800 border-gray-700">
+          <CardContent className="text-center py-8 text-gray-400">
             설정된 정원이 없습니다.
           </CardContent>
         </Card>
@@ -189,7 +189,7 @@ export default function HeadcountPage() {
             const currentCount = getOrgCurrentCount(limit.organizationId);
             const usage = getUsageStatus(currentCount, limit.limitCount);
             const percentage = Math.min((currentCount / limit.limitCount) * 100, 100);
-            
+
             return (
               <Card key={limit.id}>
                 <CardContent className="pt-6">
@@ -212,14 +212,14 @@ export default function HeadcountPage() {
                         </span>
                       </Badge>
                     </div>
-                    
+
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">정원 사용률</span>
                         <span className={usage.color}>{percentage.toFixed(0)}%</span>
                       </div>
-                      <Progress 
-                        value={percentage} 
+                      <Progress
+                        value={percentage}
                         className={`h-2 ${usage.status === 'over' ? '[&>div]:bg-red-500' : usage.status === 'warning' ? '[&>div]:bg-yellow-500' : ''}`}
                       />
                     </div>

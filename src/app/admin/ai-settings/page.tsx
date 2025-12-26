@@ -24,13 +24,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { 
-  Plus, 
-  Settings, 
-  Trash2, 
-  RefreshCw, 
-  CheckCircle, 
-  XCircle, 
+import {
+  Plus,
+  Settings,
+  Trash2,
+  RefreshCw,
+  CheckCircle,
+  XCircle,
   AlertCircle,
   Server,
   Loader2,
@@ -67,7 +67,7 @@ export default function AISettingsPage() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [testingId, setTestingId] = useState<string | null>(null);
   const [testResults, setTestResults] = useState<Record<string, TestResult>>({});
-  
+
   // 새 Provider 폼 상태
   const [newProvider, setNewProvider] = useState({
     name: "",
@@ -120,7 +120,7 @@ export default function AISettingsPage() {
   // Provider 삭제
   const handleDelete = async (id: string) => {
     if (!confirm("정말 삭제하시겠습니까?")) return;
-    
+
     try {
       const res = await fetch(`/api/admin/ai-providers/${id}`, {
         method: "DELETE",
@@ -211,8 +211,8 @@ export default function AISettingsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">AI 설정</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-2xl font-bold text-white">AI 설정</h1>
+          <p className="text-gray-400 mt-1">
             AI Provider 연결 및 모델 설정을 관리합니다
           </p>
         </div>
@@ -262,7 +262,7 @@ export default function AISettingsPage() {
                   value={newProvider.baseUrl}
                   onChange={(e) => setNewProvider({ ...newProvider, baseUrl: e.target.value })}
                 />
-                <p className="text-xs text-muted-foreground">
+                <p className="text-xs text-gray-400">
                   오프라인망 정책: 내부 네트워크 주소만 허용됩니다
                 </p>
               </div>
@@ -290,7 +290,7 @@ export default function AISettingsPage() {
 
       {/* Quick Links */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="cursor-pointer hover:bg-muted/50" onClick={() => window.location.href = "/admin/ai-settings/mappings"}>
+        <Card className="bg-gray-800 border-gray-700 cursor-pointer hover:bg-gray-700/50" onClick={() => window.location.href = "/admin/ai-settings/mappings"}>
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
               <Settings className="h-4 w-4" />
@@ -298,13 +298,13 @@ export default function AISettingsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-gray-400">
               HR 기능별 사용할 AI 모델을 설정합니다
             </p>
           </CardContent>
         </Card>
-        
-        <Card className="cursor-pointer hover:bg-muted/50" onClick={() => window.location.href = "/admin/ai-settings/logs"}>
+
+        <Card className="bg-gray-800 border-gray-700 cursor-pointer hover:bg-gray-700/50" onClick={() => window.location.href = "/admin/ai-settings/logs"}>
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
               <Server className="h-4 w-4" />
@@ -312,12 +312,12 @@ export default function AISettingsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-gray-400">
               AI 사용 이력 및 감사 로그를 확인합니다
             </p>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-base">통계</CardTitle>
@@ -326,13 +326,13 @@ export default function AISettingsPage() {
             <div className="flex items-center gap-4">
               <div>
                 <p className="text-2xl font-bold">{providers.length}</p>
-                <p className="text-xs text-muted-foreground">Provider</p>
+                <p className="text-xs text-gray-400">Provider</p>
               </div>
               <div>
                 <p className="text-2xl font-bold text-green-600">
                   {providers.filter(p => p.status === "ACTIVE").length}
                 </p>
-                <p className="text-xs text-muted-foreground">활성</p>
+                <p className="text-xs text-gray-400">활성</p>
               </div>
             </div>
           </CardContent>
@@ -341,8 +341,8 @@ export default function AISettingsPage() {
 
       {/* Provider List */}
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold">AI Providers</h2>
-        
+        <h2 className="text-lg font-semibold text-white">AI Providers</h2>
+
         {loading ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -363,11 +363,11 @@ export default function AISettingsPage() {
         ) : (
           <div className="grid gap-4">
             {providers.map((provider) => (
-              <Card key={provider.id} className={provider.isDefault ? "border-primary" : ""}>
+              <Card key={provider.id} className={`bg-gray-800 border-gray-700 ${provider.isDefault ? 'border-primary' : ''}`}>
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <CardTitle className="text-base">{provider.name}</CardTitle>
+                      <CardTitle className="text-base text-white">{provider.name}</CardTitle>
                       {provider.isDefault && (
                         <Badge variant="outline" className="gap-1">
                           <Star className="h-3 w-3" />

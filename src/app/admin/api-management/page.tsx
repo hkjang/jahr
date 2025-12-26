@@ -16,8 +16,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { 
-  Key, 
+import {
+  Key,
   Plus,
   Webhook,
   Link2,
@@ -73,7 +73,7 @@ export default function ApiManagementPage() {
   const [webhookDialogOpen, setWebhookDialogOpen] = useState(false);
   const [integrationDialogOpen, setIntegrationDialogOpen] = useState(false);
   const [newClientSecret, setNewClientSecret] = useState<string | null>(null);
-  
+
   // Form states
   const [clientForm, setClientForm] = useState({ name: '', description: '', scopes: 'read', rateLimit: '60' });
   const [webhookForm, setWebhookForm] = useState({ name: '', url: '', events: '', secret: '' });
@@ -119,7 +119,7 @@ export default function ApiManagementPage() {
           rateLimitPerMin: parseInt(clientForm.rateLimit),
         }),
       });
-      
+
       if (res.ok) {
         const data = await res.json();
         setNewClientSecret(data.clientSecret);
@@ -167,7 +167,7 @@ export default function ApiManagementPage() {
           secret: webhookForm.secret || null,
         }),
       });
-      
+
       if (res.ok) {
         setWebhookDialogOpen(false);
         setWebhookForm({ name: '', url: '', events: '', secret: '' });
@@ -213,7 +213,7 @@ export default function ApiManagementPage() {
           config: { apiKey: integrationForm.apiKey, endpoint: integrationForm.endpoint },
         }),
       });
-      
+
       if (res.ok) {
         setIntegrationDialogOpen(false);
         setIntegrationForm({ name: '', type: 'ERP', apiKey: '', endpoint: '' });
@@ -244,38 +244,38 @@ export default function ApiManagementPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">API 관리</h1>
-        <p className="text-muted-foreground">API 클라이언트, Webhook 및 외부 연동을 관리합니다.</p>
+        <h1 className="text-2xl font-bold text-white">API 관리</h1>
+        <p className="text-gray-400 mt-1">API 클라이언트, Webhook 및 외부 연동을 관리합니다.</p>
       </div>
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">API 클라이언트</CardTitle>
-            <Key className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-white">API 클라이언트</CardTitle>
+            <Key className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.clients}</div>
-            <p className="text-xs text-muted-foreground">{stats.activeClients}개 활성</p>
+            <div className="text-2xl font-bold text-white">{stats.clients}</div>
+            <p className="text-xs text-gray-400">{stats.activeClients}개 활성</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Webhook</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">Webhook</CardTitle>
             <Webhook className="h-4 w-4 text-purple-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.webhooks}</div>
+            <div className="text-2xl font-bold text-white">{stats.webhooks}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">외부 연동</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">외부 연동</CardTitle>
             <Link2 className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.integrations}</div>
+            <div className="text-2xl font-bold text-white">{stats.integrations}</div>
           </CardContent>
         </Card>
       </div>
@@ -296,12 +296,12 @@ export default function ApiManagementPage() {
               클라이언트 추가
             </Button>
           </div>
-          
+
           {loading ? (
-            <div className="text-center py-8 text-muted-foreground">로딩 중...</div>
+            <div className="text-center py-8 text-gray-400">로딩 중...</div>
           ) : clients.length === 0 ? (
-            <Card>
-              <CardContent className="text-center py-8 text-muted-foreground">
+            <Card className="bg-gray-800 border-gray-700">
+              <CardContent className="text-center py-8 text-gray-400">
                 등록된 API 클라이언트가 없습니다.
               </CardContent>
             </Card>
@@ -454,7 +454,7 @@ export default function ApiManagementPage() {
               {newClientSecret ? '아래 시크릿을 안전하게 보관하세요. 다시 확인할 수 없습니다.' : 'OAuth2 API 클라이언트를 생성합니다.'}
             </DialogDescription>
           </DialogHeader>
-          
+
           {newClientSecret ? (
             <div className="space-y-4 py-4">
               <div className="space-y-2">

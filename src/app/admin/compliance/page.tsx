@@ -16,8 +16,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { 
-  AlertTriangle, 
+import {
+  AlertTriangle,
   FileText,
   Clock,
   BookOpen,
@@ -177,35 +177,35 @@ export default function CompliancePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">컴플라이언스</h1>
-        <p className="text-muted-foreground">노무 및 법규 준수 현황을 관리합니다.</p>
+        <h1 className="text-2xl font-bold text-white">컴플라이언스</h1>
+        <p className="text-gray-400 mt-1">노무 및 법규 준수 현황을 관리합니다.</p>
       </div>
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className={criticalAlerts > 0 ? 'border-red-500' : ''}>
+        <Card className={`bg-gray-800 border-gray-700 ${criticalAlerts > 0 ? 'border-red-500' : ''}`}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">미해결 알림</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">미해결 알림</CardTitle>
             <AlertTriangle className={`h-4 w-4 ${criticalAlerts > 0 ? 'text-red-500' : 'text-yellow-500'}`} />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${criticalAlerts > 0 ? 'text-red-600' : ''}`}>{pendingAlerts}</div>
-            {criticalAlerts > 0 && <p className="text-xs text-red-600">Critical: {criticalAlerts}</p>}
+            <div className={`text-2xl font-bold ${criticalAlerts > 0 ? 'text-red-400' : 'text-white'}`}>{pendingAlerts}</div>
+            {criticalAlerts > 0 && <p className="text-xs text-red-400">Critical: {criticalAlerts}</p>}
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">근로 계약</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">근로 계약</CardTitle>
             <FileText className="h-4 w-4 text-blue-500" />
           </CardHeader>
-          <CardContent><div className="text-2xl font-bold">{contracts.length}</div></CardContent>
+          <CardContent><div className="text-2xl font-bold text-white">{contracts.length}</div></CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">법규 업데이트</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">법규 업데이트</CardTitle>
             <BookOpen className="h-4 w-4 text-green-500" />
           </CardHeader>
-          <CardContent><div className="text-2xl font-bold">{legalUpdates.length}</div></CardContent>
+          <CardContent><div className="text-2xl font-bold text-white">{legalUpdates.length}</div></CardContent>
         </Card>
       </div>
 

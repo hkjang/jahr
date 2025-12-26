@@ -17,8 +17,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { 
-  AlertTriangle, 
+import {
+  AlertTriangle,
   Activity,
   Rocket,
   Database,
@@ -211,49 +211,49 @@ export default function OperationsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">운영 현황</h1>
-          <p className="text-muted-foreground">시스템 인시던트, 배포, 백업 현황을 관리합니다.</p>
+          <h1 className="text-2xl font-bold text-white">운영 현황</h1>
+          <p className="text-gray-400 mt-1">시스템 인시던트, 배포, 백업 현황을 관리합니다.</p>
         </div>
       </div>
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card className={criticalIncidents > 0 ? 'border-red-500' : ''}>
+        <Card className={`bg-gray-800 border-gray-700 ${criticalIncidents > 0 ? 'border-red-500' : ''}`}>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">활성 인시던트</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">활성 인시던트</CardTitle>
             <AlertTriangle className={`h-4 w-4 ${criticalIncidents > 0 ? 'text-red-500' : 'text-yellow-500'}`} />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${criticalIncidents > 0 ? 'text-red-600' : ''}`}>{activeIncidents}</div>
-            {criticalIncidents > 0 && <p className="text-xs text-red-600">P1 심각: {criticalIncidents}건</p>}
+            <div className={`text-2xl font-bold ${criticalIncidents > 0 ? 'text-red-400' : 'text-white'}`}>{activeIncidents}</div>
+            {criticalIncidents > 0 && <p className="text-xs text-red-400">P1 심각: {criticalIncidents}건</p>}
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">평균 응답시간</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">평균 응답시간</CardTitle>
             <Activity className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{metrics?.stats.avgResponseTime || 0}ms</div>
-            <p className="text-xs text-muted-foreground">P95: {metrics?.stats.p95ResponseTime || 0}ms</p>
+            <div className="text-2xl font-bold text-white">{metrics?.stats.avgResponseTime || 0}ms</div>
+            <p className="text-xs text-gray-400">P95: {metrics?.stats.p95ResponseTime || 0}ms</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">에러율</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">에러율</CardTitle>
             <Activity className="h-4 w-4 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{metrics?.stats.errorRate || 0}%</div>
+            <div className="text-2xl font-bold text-white">{metrics?.stats.errorRate || 0}%</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">최근 배포</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">최근 배포</CardTitle>
             <Rocket className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{deployments.length}</div>
+            <div className="text-2xl font-bold text-white">{deployments.length}</div>
           </CardContent>
         </Card>
       </div>
@@ -274,7 +274,7 @@ export default function OperationsPage() {
               인시던트 등록
             </Button>
           </div>
-          
+
           {loading ? (
             <div className="text-center py-8 text-muted-foreground">로딩 중...</div>
           ) : incidents.length === 0 ? (
@@ -321,7 +321,7 @@ export default function OperationsPage() {
               배포 기록
             </Button>
           </div>
-          
+
           {deployments.length === 0 ? (
             <Card><CardContent className="text-center py-8 text-muted-foreground">배포 이력이 없습니다.</CardContent></Card>
           ) : (
@@ -358,7 +358,7 @@ export default function OperationsPage() {
               백업 스케줄 추가
             </Button>
           </div>
-          
+
           {backups.length === 0 ? (
             <Card><CardContent className="text-center py-8 text-muted-foreground">백업 스케줄이 없습니다.</CardContent></Card>
           ) : (

@@ -8,8 +8,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { 
-  FileText, 
+import {
+  FileText,
   Plus,
   Search,
   Eye,
@@ -60,7 +60,7 @@ export default function PoliciesPage() {
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   const [formData, setFormData] = useState({
     code: '',
     title: '',
@@ -80,7 +80,7 @@ export default function PoliciesPage() {
       let url = '/api/policies?';
       if (statusFilter !== 'all') url += `status=${statusFilter}&`;
       if (searchQuery) url += `search=${encodeURIComponent(searchQuery)}`;
-      
+
       const response = await fetch(url);
       if (response.ok) {
         const data = await response.json();
@@ -105,7 +105,7 @@ export default function PoliciesPage() {
           createdBy: 'admin',
         }),
       });
-      
+
       if (response.ok) {
         setShowCreateForm(false);
         fetchPolicies();
@@ -130,7 +130,7 @@ export default function PoliciesPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),
       });
-      
+
       if (response.ok) {
         fetchPolicies();
       }
@@ -141,12 +141,12 @@ export default function PoliciesPage() {
 
   const deletePolicy = async (id: string) => {
     if (!confirm('이 규정을 삭제하시겠습니까?')) return;
-    
+
     try {
       const response = await fetch(`/api/policies/${id}`, {
         method: 'DELETE',
       });
-      
+
       if (response.ok) {
         fetchPolicies();
       }
@@ -167,8 +167,8 @@ export default function PoliciesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">인사 규정</h1>
-          <p className="text-muted-foreground">인사 규정 및 정책을 관리합니다.</p>
+          <h1 className="text-2xl font-bold text-white">인사 규정</h1>
+          <p className="text-gray-400 mt-1">인사 규정 및 정책을 관리합니다.</p>
         </div>
         <Button onClick={() => setShowCreateForm(true)}>
           <Plus className="h-4 w-4 mr-2" />
@@ -178,31 +178,31 @@ export default function PoliciesPage() {
 
       {/* Stats */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">전체 규정</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-white">전체 규정</CardTitle>
+            <FileText className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.total}</div>
+            <div className="text-2xl font-bold text-white">{stats.total}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">시행중</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">시행중</CardTitle>
             <CheckCircle className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.active}</div>
+            <div className="text-2xl font-bold text-green-400">{stats.active}</div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">초안</CardTitle>
+            <CardTitle className="text-sm font-medium text-white">초안</CardTitle>
             <Edit className="h-4 w-4 text-gray-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.draft}</div>
+            <div className="text-2xl font-bold text-white">{stats.draft}</div>
           </CardContent>
         </Card>
       </div>
@@ -210,7 +210,7 @@ export default function PoliciesPage() {
       {/* Filters */}
       <div className="flex items-center gap-4">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
           <Input
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -234,28 +234,28 @@ export default function PoliciesPage() {
 
       {/* Policies List */}
       {loading ? (
-        <div className="text-center py-8 text-muted-foreground">로딩 중...</div>
+        <div className="text-center py-8 text-gray-400">로딩 중...</div>
       ) : policies.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-8 text-muted-foreground">
+        <Card className="bg-gray-800 border-gray-700">
+          <CardContent className="text-center py-8 text-gray-400">
             등록된 규정이 없습니다.
           </CardContent>
         </Card>
       ) : (
         <div className="grid gap-4">
           {policies.map(policy => (
-            <Card key={policy.id}>
+            <Card key={policy.id} className="bg-gray-800 border-gray-700">
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between">
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Badge variant="outline">{policy.code}</Badge>
-                      <h3 className="font-semibold">{policy.title}</h3>
+                      <h3 className="font-semibold text-white">{policy.title}</h3>
                       <Badge className={statusColors[policy.status]}>
                         {statusLabels[policy.status]}
                       </Badge>
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-4 text-sm text-gray-400">
                       {policy.category && <span>📁 {policy.category.name}</span>}
                       <span className="flex items-center gap-1">
                         <History className="h-3 w-3" />
@@ -281,11 +281,11 @@ export default function PoliciesPage() {
                       </div>
                     )}
                   </div>
-                  
+
                   <div className="flex items-center gap-2">
                     {policy.status === 'DRAFT' && (
-                      <Button 
-                        size="sm" 
+                      <Button
+                        size="sm"
                         onClick={() => updateStatus(policy.id, 'ACTIVE')}
                       >
                         시행
@@ -297,8 +297,8 @@ export default function PoliciesPage() {
                     <Button variant="outline" size="icon">
                       <Edit className="h-4 w-4" />
                     </Button>
-                    <Button 
-                      variant="outline" 
+                    <Button
+                      variant="outline"
                       size="icon"
                       onClick={() => deletePolicy(policy.id)}
                     >

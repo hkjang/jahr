@@ -8,11 +8,11 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Users, 
-  TrendingUp, 
-  DollarSign, 
-  Building2, 
+import {
+  Users,
+  TrendingUp,
+  DollarSign,
+  Building2,
   Plus,
   Filter,
   Download,
@@ -65,7 +65,7 @@ export default function WorkforcePlanningPage() {
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
-  
+
   const [formData, setFormData] = useState({
     year: new Date().getFullYear(),
     quarter: '',
@@ -120,7 +120,7 @@ export default function WorkforcePlanningPage() {
           createdBy: 'admin',
         }),
       });
-      
+
       if (response.ok) {
         setShowCreateForm(false);
         fetchPlans();
@@ -160,8 +160,8 @@ export default function WorkforcePlanningPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">인력 계획</h1>
-          <p className="text-muted-foreground">연간 및 분기별 인력 수요 계획을 관리합니다.</p>
+          <h1 className="text-2xl font-bold text-white">인력 계획</h1>
+          <p className="text-gray-400 mt-1">연간 및 분기별 인력 수요 계획을 관리합니다.</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm">
@@ -177,47 +177,47 @@ export default function WorkforcePlanningPage() {
 
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">대상 조직</CardTitle>
-            <Building2 className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-white">대상 조직</CardTitle>
+            <Building2 className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalOrgs}</div>
-            <p className="text-xs text-muted-foreground">개 부서</p>
+            <div className="text-2xl font-bold text-white">{stats.totalOrgs}</div>
+            <p className="text-xs text-gray-400">개 부서</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">현재 인원</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-white">현재 인원</CardTitle>
+            <Users className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalCurrentHeadcount}</div>
-            <p className="text-xs text-muted-foreground">명</p>
+            <div className="text-2xl font-bold text-white">{stats.totalCurrentHeadcount}</div>
+            <p className="text-xs text-gray-400">명</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">계획 인원</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-white">계획 인원</CardTitle>
+            <TrendingUp className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalPlannedHeadcount}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-2xl font-bold text-white">{stats.totalPlannedHeadcount}</div>
+            <p className="text-xs text-gray-400">
               {stats.totalPlannedHeadcount - stats.totalCurrentHeadcount >= 0 ? '+' : ''}
               {stats.totalPlannedHeadcount - stats.totalCurrentHeadcount}명 변동
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="bg-gray-800 border-gray-700">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">총 예산</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium text-white">총 예산</CardTitle>
+            <DollarSign className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(stats.totalBudget)}</div>
-            <p className="text-xs text-muted-foreground">연간 인건비</p>
+            <div className="text-2xl font-bold text-white">{formatCurrency(stats.totalBudget)}</div>
+            <p className="text-xs text-gray-400">연간 인건비</p>
           </CardContent>
         </Card>
       </div>

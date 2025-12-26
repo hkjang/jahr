@@ -114,9 +114,15 @@ export function PortalHeader({ onMenuClick }: PortalHeaderProps) {
                 <>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
-                    <Link href="/admin" className="cursor-pointer text-blue-600">
-                      <Shield className="w-4 h-4 mr-2" />
-                      어드민 콘솔
+                    <Link
+                      href="/admin"
+                      className="cursor-pointer bg-gradient-to-r from-purple-500/10 to-blue-500/10 hover:from-purple-500/20 hover:to-blue-500/20"
+                    >
+                      <Shield className="w-4 h-4 mr-2 text-purple-600" />
+                      <span className="text-purple-700 dark:text-purple-400 font-medium">어드민 콘솔</span>
+                      <span className="ml-auto text-xs bg-purple-100 dark:bg-purple-900 text-purple-600 dark:text-purple-300 px-1.5 py-0.5 rounded">
+                        Admin
+                      </span>
                     </Link>
                   </DropdownMenuItem>
                 </>

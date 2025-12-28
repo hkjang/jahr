@@ -36,7 +36,7 @@ export default function AdminLayout({
       const pathSegments = pathname.split("/").filter(Boolean);
       const lastSegment = pathSegments[pathSegments.length - 1];
       const title = getPageTitle(pathname, lastSegment);
-      
+
       // Open or focus the tab for current path
       if (!tabs.find((t) => t.path === pathname)) {
         openTab({
@@ -129,6 +129,31 @@ function getPageTitle(pathname: string, lastSegment: string): string {
     marketplace: "마켓플레이스",
     lifecycle: "라이프사이클",
     skills: "스킬 관리",
+    okr: "OKR 관리",
+    "peer-review": "다면 평가",
+    "flex-work": "유연 근무",
+    projects: "프로젝트",
+    recruitment: "채용 관리",
+    "business-trips": "출장 관리",
+    export: "데이터 내보내기",
+    restructure: "조직 개편",
+    "labor-cost": "인건비 예측",
+    analytics: "HR 애널리틱스",
+    welfare: "복리후생",
+    insurance: "보험 관리",
+    national: "국민보험",
+    private: "보험 상품",
+    severance: "퇴직금",
+    "leave-promotion": "휴가 장려",
+    rnr: "R&R",
+    talent: "인재 관리",
+    promotions: "승진 관리",
+    "work-schedules": "근무 일정",
+    calculate: "급여 계산",
+    bands: "임금 밴드",
+    payroll: "급여",
+    final: "최종 평가",
+    monitor: "평가 모니터링",
   };
 
   return titleMap[lastSegment] || lastSegment;
@@ -159,6 +184,27 @@ function getPageIcon(pathname: string): string {
     "/admin/api-management": "Settings",
     "/admin/operations": "Settings",
     "/admin/settings": "Settings",
+    "/admin/okr": "Target",
+    "/admin/peer-review": "Users",
+    "/admin/flex-work": "Home",
+    "/admin/work-schedules": "CalendarCheck",
+    "/admin/payroll": "DollarSign",
+    "/admin/projects": "FolderKanban",
+    "/admin/skills": "Briefcase",
+    "/admin/talent": "UserCheck",
+    "/admin/promotions": "Award",
+    "/admin/business-trips": "Plane",
+    "/admin/export": "FileOutput",
+    "/admin/analytics": "BarChart3",
+    "/admin/ai-insights": "Activity",
+    "/admin/ai-settings": "Sparkles",
+    "/admin/lifecycle": "RefreshCw",
+    "/admin/welfare": "Heart",
+    "/admin/insurance": "Shield",
+    "/admin/severance": "DollarSign",
+    "/admin/leave-promotion": "Gift",
+    "/admin/rnr": "Award",
+    "/admin/marketplace": "Store",
   };
 
   // Check for exact match first, then prefix match

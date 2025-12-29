@@ -5,10 +5,14 @@ import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AdminSidebar } from "@/components/admin/sidebar";
 import { AdminHeader } from "@/components/admin/header";
+import { CommandPalette, useCommandPalette } from "@/components/admin/command-palette";
 import { TabBar, TabRecoveryDialog } from "@/components/tab";
 import { useTabStore } from "@/lib/stores/tab-store";
 import { useTabKeyboard } from "@/hooks";
 import { ROLES } from "@/lib/constants";
+import { cn } from "@/lib/utils";
+
+const COLLAPSED_KEY = "admin-sidebar-collapsed";
 
 export default function AdminLayout({
   children,
@@ -19,15 +23,46 @@ export default function AdminLayout({
   const router = useRouter();
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // Command palette
+  const commandPalette = useCommandPalette();
 
   // Tab store and keyboard shortcuts
   const { tabs, openTab, restoreSession } = useTabStore();
   useTabKeyboard({ enabled: true });
 
-  // Initialize tab system on mount
+  // Initialize tab system on mount and check sidebar state
   useEffect(() => {
     restoreSession();
+    const savedCollapsed = localStorage.getItem(COLLAPSED_KEY);
+    if (savedCollapsed === "true") {
+      setSidebarCollapsed(true);
+    }
   }, [restoreSession]);
+
+  // Listen for sidebar collapse changes
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === COLLAPSED_KEY) {
+        setSidebarCollapsed(e.newValue === "true");
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+
+    // Also check periodically for same-tab changes
+    const interval = setInterval(() => {
+      const current = localStorage.getItem(COLLAPSED_KEY) === "true";
+      if (current !== sidebarCollapsed) {
+        setSidebarCollapsed(current);
+      }
+    }, 100);
+
+    return () => {
+      window.removeEventListener("storage", handleStorage);
+      clearInterval(interval);
+    };
+  }, [sidebarCollapsed]);
 
   // Sync current path with tabs
   useEffect(() => {
@@ -83,12 +118,16 @@ export default function AdminLayout({
   return (
     <div className="min-h-screen bg-gray-900">
       <AdminSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      <div className="lg:pl-64">
+      <div className={cn(
+        "transition-all duration-300",
+        sidebarCollapsed ? "lg:pl-16" : "lg:pl-64"
+      )}>
         <AdminHeader onMenuClick={() => setSidebarOpen(true)} />
         <TabBar />
         <main className="p-6">{children}</main>
       </div>
       <TabRecoveryDialog />
+      <CommandPalette isOpen={commandPalette.isOpen} onClose={commandPalette.close} />
     </div>
   );
 }
